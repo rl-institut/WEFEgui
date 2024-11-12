@@ -54,6 +54,7 @@ WEFE_STEP_VERBOSE = {
 # sorts the step names based on the order defined in STEP_MAPPING (for ribbon)
 WEFE_STEP_VERBOSE = [WEFE_STEP_VERBOSE[k] for k, v in sorted(STEP_MAPPING.items(), key=lambda x: x[1])]
 
+
 @require_http_methods(["GET"])
 def wefe_home(request):
     return render(request, "wefe/index.html")
@@ -143,6 +144,7 @@ def wefe_choose_location(request, proj_id=None, step_id=STEP_MAPPING["choose_loc
         },
     )
 
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def wefe_resources(request, proj_id, step_id=STEP_MAPPING["resources"]):
@@ -155,7 +157,7 @@ def wefe_resources(request, proj_id, step_id=STEP_MAPPING["resources"]):
 
     scenario = project.scenario
     page_information = "About selecting resources"
-    context ={
+    context = {
         "proj_id": proj_id,
         "proj_name": project.name,
         "step_id": step_id,
@@ -170,6 +172,7 @@ def wefe_resources(request, proj_id, step_id=STEP_MAPPING["resources"]):
     if request.method == "POST":
         # TODO
         return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -200,20 +203,16 @@ def wefe_demand(request, proj_id, step_id=STEP_MAPPING["demand"]):
         return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
 
 
-WEFE_STEPS = {
-    "choose_location": wefe_choose_location,
-    "resources": wefe_resources,
-    "demand": wefe_demand
-}
+WEFE_STEPS = {"choose_location": wefe_choose_location, "resources": wefe_resources, "demand": wefe_demand}
 
 # sorts the order in which the views are served in wefe_steps (defined in STEP_MAPPING)
 WEFE_STEPS = [WEFE_STEPS[k] for k, v in sorted(STEP_MAPPING.items(), key=lambda x: x[1]) if k in WEFE_STEPS]
 
 
-
 ###########################################################################################
 # Projects
 ###########################################################################################
+
 
 @login_required
 @require_http_methods(["GET"])
@@ -270,5 +269,3 @@ def wefe_project_duplicate(request, proj_id):
         options.project = Project.objects.get(pk=new_proj_id)
         options.save()
     return HttpResponseRedirect(reverse("projects_list_cpn", args=[new_proj_id]))
-
-

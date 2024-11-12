@@ -15,7 +15,6 @@ def validate_not_zero(value):
 
 
 class ProjectForm(OpenPlanModelForm):
-
     start_date = forms.DateField(
         label=_("Simulation start"),
         initial=f"{timezone.now().year}-01-01",
@@ -115,6 +114,3 @@ class EconomicDataForm(OpenPlanModelForm):
                 self.cleaned_data[field] = value / 100
 
         return self.cleaned_data
-
-
-
