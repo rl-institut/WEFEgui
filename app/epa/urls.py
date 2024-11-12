@@ -32,7 +32,8 @@ urlpatterns = (
         path("privacy/", privacy, name="privacy"),
         path("about/", about, name="about"),
         path("license/", license, name="license"),
-        path("", include("cp_nigeria.urls")),
+        path("cp_nigeria", include("cp_nigeria.urls")),
+        path("", include("wefe.urls")),
     )
     + [re_path(r"^i18n/", include("django.conf.urls.i18n"))]
     + staticfiles_urlpatterns()

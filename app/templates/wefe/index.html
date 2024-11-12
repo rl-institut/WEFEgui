@@ -1,0 +1,26 @@
+{% extends 'wefe/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block index %}
+  <main>
+    <section class="hero section" id="hero" data-aos="fade-up">
+      <div>
+        <div class="hero__text">
+          <h1>
+            {% translate "Model your local energy demand" %}
+          </h1>
+          <span>
+                    {% translate "Your digital planning assistant for integrated water-energy-food-environment systems" %}
+                  </span>
+          <a href="{% url 'wefe_new_scenario' %}" class="btn btn--medium">
+            {% translate "Get started" %}
+          </a>
+        </div>
+        <!--div class="hero__image">
+          <img src="{% static 'assets/illustrations/energy_system_gui.svg' %}" alt="Energy system GUI">
+        </div-->
+      </div>
+    </section>
+  </main>
+{% endblock index %}
