@@ -1,8 +1,8 @@
-{% extends 'cp_nigeria/base_cpn.html' %}
+{% extends 'wefe/base.html' %}
 {% load i18n %}
 
 {% block navbar %}
-{% include "cp_nigeria/navbar_cpn.html" with user=user scenario_create=True documentation_url=documentation_url%}
+{% include "wefe/navbar.html" with user=user scenario_create=True documentation_url=documentation_url%}
 {% endblock navbar %}
 
 {% block title %} {% translate "Scenario step" %} {{ step_id }} {% endblock title%}
@@ -32,7 +32,7 @@
 				{% for step in step_list %}
 				<li {% if step_id == forloop.counter %} class="active" {% endif %}>
 					{% if proj_id %}
-					<a href="{% url 'cpn_steps' proj_id forloop.counter %}" >{% translate step %}</a>
+					<a href="{% url 'wefe_steps' proj_id forloop.counter %}" >{% translate step %}</a>
 					{% else %}
 					{% translate step %}
 					{% endif %}
@@ -68,12 +68,12 @@
 		<div class="step-footer__center">
 			{% if proj_id %}
 			{% if step_id > 1 %}
-			<a id="previous-button" class="btn btn--medium btn--hollow btn--previous" href="{% url 'cpn_steps' proj_id step_id|add:'-1' %}" aria-disabled="true">{% translate "Previous" %}</a>
+			<a id="previous-button" class="btn btn--medium btn--hollow btn--previous" href="{% url 'wefe_steps' proj_id step_id|add:'-1' %}" aria-disabled="true">{% translate "Previous" %}</a>
 			{% endif %}
 
 			{% if step_id < step_list|length %}
 			{% block next_btn %}
-			<a id="next-button" class="btn btn--medium" href="{% url 'cpn_steps' proj_id step_id|add:1 %}">{% translate "Next" %}</a>
+			<a id="next-button" class="btn btn--medium" href="{% url 'wefe_steps' proj_id step_id|add:1 %}">{% translate "Next" %}</a>
 			{% endblock next_btn %}
 			{% endif %}
 			{% else %}

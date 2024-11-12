@@ -1,4 +1,4 @@
-{% extends 'cp_nigeria/steps/step_progression.html' %}
+{% extends 'wefe/steps/step_progression.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
 {% load i18n %}
@@ -28,11 +28,11 @@
                     </div>
                     <form method="post">
                         {% csrf_token %}
-                        {{ form.community | as_crispy_field }}
+
                         {% for field in form %}
-                            {% if field.name != 'community' %}
-                                {{ field | as_crispy_field }}
-                            {% endif %}
+
+											    {{ field | as_crispy_field }}
+
                         {% endfor %}
                         {{ economic_data | crispy }}
                         <button id="submitFormBtn" style="display: none;" type="submit">

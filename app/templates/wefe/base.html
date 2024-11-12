@@ -8,11 +8,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/cp_nigeria/favicon/apple-touch-icon.png' %}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/cp_nigeria/favicon/favicon-32x32.png' %}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/cp_nigeria/favicon/favicon-16x16.png' %}">
-    <link rel="manifest" href="{% static 'assets/cp_nigeria/favicon/site.webmanifest' %}">
-    <link rel="mask-icon" href="{% static 'assets/cp_nigeria/favicon/safari-pinned-tab.svg' %}" color="#5bbad5">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/wefe/favicon/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/wefe/favicon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/wefe/favicon/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'assets/wefe/favicon/site.webmanifest' %}">
+    <link rel="mask-icon" href="{% static 'assets/wefe/favicon/safari-pinned-tab.svg' %}" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#2b5797">
     <meta name="theme-color" content="#ffffff">
     <!--<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
@@ -23,7 +23,7 @@
 
 
 
-    <title>{% block title %} cp_nigeria {% endblock title %}</title>
+    <title>{% block title %} wefe {% endblock title %}</title>
 
 
 
@@ -57,7 +57,7 @@
 {% setvar "https://open-plan.readthedocs.io/en/feature-new_documentation/" as documentation_url %}
 
 {% block navbar %}
-    {% include "cp_nigeria/navbar_cpn.html" with user=user documentation_url=documentation_url %}
+    {% include "wefe/navbar.html" with user=user documentation_url=documentation_url %}
 {% endblock navbar %}
 
 {% block topology %}{% endblock %}
@@ -84,7 +84,7 @@
 
     <div>
         <div class="footer__logo">
-            <img src="{% static 'assets/logos/cpnigeria-logo.svg' %}" alt="CP-Nigeria logo">
+            <img src="{% static 'assets/logos/wefelogo.png' %}" alt="CP-Nigeria logo">
         </div>
         <div class="footer__links">
             <ul>

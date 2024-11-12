@@ -13,8 +13,8 @@
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light {{ navbar_class }}">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'home_cpn' %}">
-            <img src="{% static 'assets/logos/cpnigeria-logo.svg' %}" alt="CP-Nigeria Logo">
+        <a class="navbar-brand" href="{% url 'wefe_home' %}">
+            <img src="{% static 'assets/logos/wefelogo.png' %}" alt="CP-Nigeria Logo">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -30,7 +30,7 @@
                         </li>
                         <li class="nav-item">
                             <!--scenario-empty.html-->
-                            <a class="nav-link" href="{% url 'cpn_new_scenario' %}">{% translate "New scenario" %}</a>
+                            <a class="nav-link" href="{% url 'wefe_new_scenario' %}">{% translate "New scenario" %}</a>
                         </li>
 <!--                        <li class="nav-item">-->
                             <!--project-view.html-->

@@ -1,26 +1,14 @@
-# Welcome to the Communities of Practice Nigeria gui repository
-![CP_Nigeria logo (10X1)](https://github.com/rl-institut/cp_nigeria_app/blob/dev/app/static/assets/logos/cpnigeria-logo.png)
+# Welcome to the WEFE OPTIMG repository
 
-This graphical user interface allow its users to simulate a simple energy system by selecting components (components
-are diesel generator, solar pv panels and battery) and to generate an implementation plan that includes information
-about the mini-grid system, as well as a preliminary financial analysis along the project lifetime. This document can
-then be used to aid in approaching stakeholders and asking local energy agencies for funding for a mini-grid project.
-The demand of the community can be built manually by the user based on the typical demand profiles published in the scope of the [PeopleSun project](https://www.peoplesun.org/).
+Brief description
 
-It is currently hosted at https://community-minigrid.ng/en/.
-
-Learn more about the CP Nigeria project on its [project page](https://reiner-lemoine-institut.de/en/project-cp-nigeria/).
+Learn more about the OPTIMG project on its [project page](https://reiner-lemoine-institut.de/en/).
 
 ## Credits
 This code is directly forked from previous open-source work [open-plan-tool](https://github.com/open-plan-tool/gui).
 ## Basic structure
 
-This repository contains the code for the user interface. The simulations are performed by [multi-vector-simulator](https://github.com/rl-institut/multi-vector-simulator) on a dedicated server (see the [open-plan-tool/simulation-server](https://github.com/open-plan-tool/simulation-server) repository). Once a simulation is over the results are sent back to the user interface were one can analyse them.
-
-![open-plan structure](https://github.com/open-plan-tool/gui/assets/4399407/89e1ff2a-1dd0-40e6-91a3-465c77426867)
-
-(The structure is the same as the one of the open-plan-tool, this is why this graphic is still used as-is)
-
+This repository contains the code for the user interface. The simulations are performed by [django-oemof]https://github.com/rl-institut/django-oemof) on a dedicated server. Once a simulation is over the results are sent back to the user interface were one can analyse them.
 
 
 # Getting Started
@@ -57,8 +45,8 @@ The following commands should get everything up and running, using the web based
 You need to be able to run docker-compose inside your terminal. If you can't you should install [Docker desktop](https://www.docker.com/products/docker-desktop/) first.
 
 
-* Clone the repository locally `git clone --single-branch --branch dev https://github.com/rl-institut/cp_nigeria_app.git cp_gui`
-* Move inside the created folder (`cd cp_gui`)
+* Clone the repository locally `git clone --single-branch --branch dev https://github.com/rl-institut/WEFEgui.git wefe_gui`
+* Move inside the created folder (`cd wefe_gui`)
 * Edit the `.envs/epa.postgres` and `.envs/db.postgres` environment files
    * Change the value assigned to `EPA_SECRET_KEY` with a [randomly generated one](https://randomkeygen.com/)
    * Make sure to replace dummy names with you preferred names
@@ -66,7 +54,7 @@ You need to be able to run docker-compose inside your terminal. If you can't you
    the variables `SQL_DATABASE`, `SQL_USER`, `SQL_PASSWORD` in `.envs/epa.postgres`, respectively
 
    * Define an environment variable `MVS_HOST_API` in `.envs/epa.postgres` and set the url of the simulation server
-   you wish to use for your models (for example `MVS_API_HOST="<url to your favorite simulation server>"`), you can deploy your own [simulation server](https://github.com/open-plan-tool/simulation-server) locally if you need
+   you wish to use for your models (for example `MVS_API_HOST="<url to your favorite simulation server>"`), you can deploy your own [simulation server]() locally if you need
     * To automatically download PV potential based on coordinates, add an environment variable `RN_API_TOKEN` containing your API token from https://www.renewables.ninja/
     * To automatically fetch currency exchange rates, add an environment variable `EXCHANGE_RATES_API_TOKEN` containing your API token from https://www.exchangerate-api.com/
 
@@ -87,12 +75,6 @@ Finally
 If you use a proxy you will need to set `USE_PROXY=True` and edit `PROXY_ADDRESS=http://proxy_address:port` with your proxy settings in `.envs/epa.postgres`.
 
 >**_NOTE:_** If you wish to use mysql instead of postgres, simply replace `postgres` by `mysql` and `app_pg` by `app` in the above commands or filenames
-<hr>
-
->**_NOTE:_** Grab a cup of coffee or tea for this...
-<hr>
-
->**_NOTE:_** Grab a cup of coffee or tea for this...
 <hr>
 
 ## Test Account

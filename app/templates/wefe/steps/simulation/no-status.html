@@ -1,4 +1,4 @@
-{% extends 'cp_nigeria/steps/step_progression.html' %}
+{% extends 'wefe/steps/step_progression.html' %}
 {% load i18n %}
 
 
@@ -31,8 +31,8 @@
 	<div>
 		<div class="step-footer__left"></div>
 		<div class="step-footer__center">
-			<a class="btn btn--medium btn--hollow btn--previous" href="{% url 'cpn_steps' proj_id step_id|add:'-1' %}" aria-disabled="true">{% translate "Previous" %}</a>
-			<a class="btn btn--medium" href="{% url 'cpn_simulation_request' proj_id %}" > {% translate "Run simulation" %}</a>
+			<a class="btn btn--medium btn--hollow btn--previous" href="{% url 'wefe_steps' proj_id step_id|add:'-1' %}" aria-disabled="true">{% translate "Previous" %}</a>
+			<a class="btn btn--medium" href="{% url 'wefe_simulation_request' proj_id %}" > {% translate "Run simulation" %}</a>
 		</div>
 		<div class="step-footer__right"></div>
 	</div>

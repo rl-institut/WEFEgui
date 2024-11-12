@@ -1,4 +1,4 @@
-{% extends 'cp_nigeria/base_cpn.html' %}
+{% extends 'wefe/base.html' %}
 {% load custom_filters %}
 {% load crispy_forms_tags %}
 {% load static %}
@@ -42,7 +42,7 @@
                     {% translate "Create project" %}
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="newProjectButton">
-                    <li><a class="dropdown-item" href="{% url 'cpn_new_scenario' %}">{% translate "Empty project" %}</a></li>
+                    <li><a class="dropdown-item" href="{% url 'wefe_new_scenario' %}">{% translate "Empty project" %}</a></li>
                     <!--li><a class="dropdown-item" onclick="javascript:showModal(event, modalId='uploadProjectModal', attrs={'action': `{% url 'project_upload' %}`, 'enctype': 'multipart/form-data' })">{% translate "From file" %}</a></li>
                     <li><a class="dropdown-item" onclick="javascript:showModal(event, modalId='useCaseModal', attrs={'action': `{% url 'project_from_usecase' %}`, 'enctype': 'multipart/form-data' })">{% translate "From use case" %}</a></li-->
                 </ul>
@@ -67,7 +67,7 @@
             <section class="{{ project_css }}" id="project-{{ project.id }}">
                 <div>
                     <div class="project__top">
-                        <a  href="{% url 'cpn_scenario_create' project.id %}">
+                        <a  href="{% url 'wefe_scenario_create' project.id %}">
                             <h2 class= "name"> {% translate project.name %} </h2>
                         </a>
 												<span class="role">
@@ -101,17 +101,17 @@
                         </div>
                         <div class="actions">
 													  {% if project.scenario.simulation %}
-													  <a class="btn btn--action btn--hollow action" href="{% url 'cpn_outputs' proj_id=project.id %}">
+													  <a class="btn btn--action btn--hollow action" href="{% url 'wefe_outputs' proj_id=project.id %}">
                                 <span class="icon icon-results" aria-hidden="true"></span>
                                 {% translate "Results" %}
                             </a>
 													  {% endif %}
 														{% if project.id|has_viewer_edit_rights:request.user %}
-														<a class="btn btn--action action" href="{% url 'cpn_scenario_create' project.pk %}">
+														<a class="btn btn--action action" href="{% url 'wefe_scenario_create' project.pk %}">
                                 <span class="icon icon-edit" aria-hidden="true"></span>
                                 {% translate "Edit" %}
                             </a>
-                            <form action="{% url 'cpn_project_duplicate' project.id %}"
+                            <form action="{% url 'wefe_project_duplicate' project.id %}"
                                   method="POST">
                                 {% csrf_token %}
                                 <!-- TODO change the ugly inline style-->
@@ -120,7 +120,7 @@
                                     {% translate "Duplicate" %}
                                 </button>
                             </form>
-                            <form action="{% url 'cpn_project_delete' project.id %}"
+                            <form action="{% url 'wefe_project_delete' project.id %}"
                                   method="POST">
                                 {% csrf_token %}
                                 <!-- TODO change the ugly inline style-->

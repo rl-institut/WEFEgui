@@ -1,4 +1,4 @@
-{% extends 'cp_nigeria/base_cpn.html' %}
+{% extends 'wefe/base.html' %}
 {% load static %}
 {% load i18n %}
 
@@ -11,10 +11,10 @@
             {% translate "Model your local energy demand" %}
           </h1>
           <span>
-                    {% translate "Use this tool to model and optimize your local energy demand based on community characteristics and needs." %}
+                    {% translate "Your digital planning assistant for integrated water-energy-food-environment systems" %}
                   </span>
-          <a href="{% url 'cpn_new_scenario' %}" class="btn btn--medium">
-            {% translate "Let's start" %}
+          <a href="{% url 'wefe_new_scenario' %}" class="btn btn--medium">
+            {% translate "Get started" %}
           </a>
         </div>
         <!--div class="hero__image">

@@ -1,4 +1,4 @@
-{% extends 'cp_nigeria/base_cpn.html' %}
+{% extends 'wefe/base.html' %}
 {% load static %}
 {% load i18n %}
 {% load crispy_forms_tags %}
@@ -6,7 +6,7 @@
 {% block title %}Sign Up{% endblock title %}
 
 {% block navbar %}
-    {% include "cp_nigeria/navbar_cpn.html" with user=user signup=True documentation_url=documentation_url%}
+    {% include "wefe/navbar.html" with user=user signup=True documentation_url=documentation_url%}
 {% endblock navbar %}
 
 {% block index %}

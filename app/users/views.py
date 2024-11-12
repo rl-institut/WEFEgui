@@ -50,7 +50,7 @@ def signup(request):
                 request,
                 _("Please confirm your email address to complete the registration"),
             )
-            return redirect("home_cpn")
+            return redirect("wefe_home")
     else:
         form = CustomUserCreationForm(privacy_url=reverse("privacy"))
     return render(request, "registration/signup.html", {"form": form})

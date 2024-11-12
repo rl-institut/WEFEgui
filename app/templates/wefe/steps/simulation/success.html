@@ -1,4 +1,4 @@
-{% extends 'cp_nigeria/steps/step_progression.html' %}}
+{% extends 'wefe/steps/step_progression.html' %}}
 {% load i18n %}
 
 {% block progression_content %}
@@ -14,7 +14,7 @@
           </div>
 					<div class="simulation__id">
 						</br>
-						<a class="btn btn--medium btn--hollow" href="{% url 'cpn_simulation_cancel' proj_id %}" onclick="return confirm('Are you sure?')">{% translate "Reset simulation" %}</a>
+						<a class="btn btn--medium btn--hollow" href="{% url 'wefe_simulation_cancel' proj_id %}" onclick="return confirm('Are you sure?')">{% translate "Reset simulation" %}</a>
 					</div>
           <div class="simulation__feedback">
             <div class="item item--successful">

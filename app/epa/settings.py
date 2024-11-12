@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "projects.apps.ProjectsConfig",
     "dashboard.apps.DashboardConfig",
     "cp_nigeria.apps.CPNigeriaConfig",
+    "wefe.apps.WefeConfig",
     "business_model.apps.BusinessModelConfig",
     # 3rd Party
     "crispy_forms",
@@ -160,8 +161,8 @@ USE_TZ = False
 AUTH_USER_MODEL = "users.CustomUser"
 
 LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "home_cpn"
-LOGOUT_REDIRECT_URL = "home_cpn"
+LOGIN_REDIRECT_URL = "wefe_home"
+LOGOUT_REDIRECT_URL = "wefe_home"
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
