@@ -40,15 +40,23 @@ logger = logging.getLogger(__name__)
 STEP_MAPPING = {
     "choose_location": 1,
     "resources": 2,
-    "demand": 3
-    # TODO fill
+    "demand": 3,
+    "economic_parameters": 4,
+    "system_layout": 5,
+    "optimization_weighting": 6,
+    "simulation": 7,
+    "results": 8,
 }
 
 WEFE_STEP_VERBOSE = {
     "choose_location": _("Choose location"),
     "resources": _("Resources_mapping"),
     "demand": _("Demand assessment"),
-    # TODO fill
+    "economic_parameters": _("Economic parameters"),
+    "system_layout": _("System layout"),
+    "optimization_weighting": _("Multi-objective optimization"),
+    "simulation": _("Simulation"),
+    "results": _("Results"),
 }
 
 # sorts the step names based on the order defined in STEP_MAPPING (for ribbon)
@@ -203,7 +211,161 @@ def wefe_demand(request, proj_id, step_id=STEP_MAPPING["demand"]):
         return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
 
 
-WEFE_STEPS = {"choose_location": wefe_choose_location, "resources": wefe_resources, "demand": wefe_demand}
+@login_required
+@require_http_methods(["GET", "POST"])
+def wefe_economic_parameters(request, proj_id, step_id=STEP_MAPPING["economic_parameters"]):
+    project = get_object_or_404(Project, id=proj_id)
+
+    if (project.user != request.user) and (
+        project.viewers.filter(user__email=request.user.email, share_rights="edit").exists() is False
+    ):
+        raise PermissionDenied
+
+    scenario = project.scenario
+
+    page_information = "About economic parameters"
+    context = {
+        "proj_id": proj_id,
+        "proj_name": project.name,
+        "step_id": step_id,
+        "step_list": WEFE_STEP_VERBOSE,
+        "page_information": page_information,
+    }
+
+    if request.method == "GET":
+        return render(request, "wefe/steps/demand.html", context)
+
+    if request.method == "POST":
+        # TODO
+        return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def wefe_system_layout(request, proj_id, step_id=STEP_MAPPING["system_layout"]):
+    project = get_object_or_404(Project, id=proj_id)
+
+    if (project.user != request.user) and (
+        project.viewers.filter(user__email=request.user.email, share_rights="edit").exists() is False
+    ):
+        raise PermissionDenied
+
+    scenario = project.scenario
+
+    page_information = "About the WEFE system layout"
+    context = {
+        "proj_id": proj_id,
+        "proj_name": project.name,
+        "step_id": step_id,
+        "step_list": WEFE_STEP_VERBOSE,
+        "page_information": page_information,
+    }
+
+    if request.method == "GET":
+        return render(request, "wefe/steps/demand.html", context)
+
+    if request.method == "POST":
+        # TODO
+        return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def wefe_optimization_weighting(request, proj_id, step_id=STEP_MAPPING["optimization_weighting"]):
+    project = get_object_or_404(Project, id=proj_id)
+
+    if (project.user != request.user) and (
+        project.viewers.filter(user__email=request.user.email, share_rights="edit").exists() is False
+    ):
+        raise PermissionDenied
+
+    scenario = project.scenario
+
+    page_information = "About defining the weighting for the multi-objective optimization"
+    context = {
+        "proj_id": proj_id,
+        "proj_name": project.name,
+        "step_id": step_id,
+        "step_list": WEFE_STEP_VERBOSE,
+        "page_information": page_information,
+    }
+
+    if request.method == "GET":
+        return render(request, "wefe/steps/demand.html", context)
+
+    if request.method == "POST":
+        # TODO
+        return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def wefe_simulation(request, proj_id, step_id=STEP_MAPPING["simulation"]):
+    project = get_object_or_404(Project, id=proj_id)
+
+    if (project.user != request.user) and (
+        project.viewers.filter(user__email=request.user.email, share_rights="edit").exists() is False
+    ):
+        raise PermissionDenied
+
+    scenario = project.scenario
+
+    page_information = "Here the simulation will be started"
+    context = {
+        "proj_id": proj_id,
+        "proj_name": project.name,
+        "step_id": step_id,
+        "step_list": WEFE_STEP_VERBOSE,
+        "page_information": page_information,
+    }
+
+    if request.method == "GET":
+        return render(request, "wefe/steps/demand.html", context)
+
+    if request.method == "POST":
+        # TODO
+        return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
+    project = get_object_or_404(Project, id=proj_id)
+
+    if (project.user != request.user) and (
+        project.viewers.filter(user__email=request.user.email, share_rights="edit").exists() is False
+    ):
+        raise PermissionDenied
+
+    scenario = project.scenario
+
+    page_information = "Results page with report option"
+    context = {
+        "proj_id": proj_id,
+        "proj_name": project.name,
+        "step_id": step_id,
+        "step_list": WEFE_STEP_VERBOSE,
+        "page_information": page_information,
+    }
+
+    if request.method == "GET":
+        return render(request, "wefe/steps/demand.html", context)
+
+    if request.method == "POST":
+        # TODO
+        return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+
+
+WEFE_STEPS = {
+    "choose_location": wefe_choose_location,
+    "resources": wefe_resources,
+    "demand": wefe_demand,
+    "economic_parameters": wefe_economic_parameters,
+    "system_layout": wefe_system_layout,
+    "optimization_weighting": wefe_optimization_weighting,
+    "simulation": wefe_simulation,
+    "results": wefe_results,
+}
 
 # sorts the order in which the views are served in wefe_steps (defined in STEP_MAPPING)
 WEFE_STEPS = [WEFE_STEPS[k] for k, v in sorted(STEP_MAPPING.items(), key=lambda x: x[1]) if k in WEFE_STEPS]
