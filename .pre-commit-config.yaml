@@ -1,6 +1,5 @@
-
 exclude: 'migrations|.git'
-default_stages: [commit]
+default_stages: [pre-commit]
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -17,7 +16,7 @@ repos:
       - id: jshint
 
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 24.8.0
     hooks:
       - id: black
 
