@@ -5,4 +5,4 @@ python manage.py makemigrations users projects dashboard wefe && \
 python manage.py migrate && \
 python manage.py loaddata 'fixtures/fixture.json' && \
 pre-commit install && \
-echo 'Completed Setup Successfully!!'
+echo 'Completed Local Setup Successfully!!'
