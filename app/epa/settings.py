@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "business_model.apps.BusinessModelConfig",
     # 3rd Party
     "crispy_forms",
+    "crispy_bootstrap5",
     "django_q",
 ]
 
@@ -164,7 +165,8 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "wefe_home"
 LOGOUT_REDIRECT_URL = "wefe_home"
 
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Please note, we don't use Django's internal email system,
 # we implement our own, using exchangelib
