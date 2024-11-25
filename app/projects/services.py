@@ -15,14 +15,18 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_q.models import Schedule
-from exchangelib import (
-    Credentials,
-    Account,
-    Message,
-    Mailbox,
-)  # pylint: disable=import-error
-from exchangelib import EWSTimeZone, Configuration
+# from exchangelib import (
+#     Credentials,
+#     Account,
+#     Message,
+#     Mailbox,
+# )  # pylint: disable=import-error
 from requests.exceptions import ConnectionError  # pylint: disable=import-error
+
+import smtplib
+import warnings
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from epa.settings import (
     EXCHANGE_ACCOUNT,
@@ -116,33 +120,53 @@ def create_or_delete_simulation_scheduler(**kwargs):
 
 
 def send_feedback_email(subject, body):
-    tz = EWSTimeZone(TIME_ZONE)
-    try:
-        credentials = Credentials(EXCHANGE_ACCOUNT, EXCHANGE_PW)
 
-        config = Configuration(server=EXCHANGE_SERVER, credentials=credentials)
+    # smtp_server = config.MAIL_HOST
+    # smtp_port = config.MAIL_PORT
+    # smtp_username = config.MAIL_ADDRESS
+    # smtp_password = config.MAIL_PW
+    # message = MIMEMultipart()
+    # message["From"] = config.HEADER_ADDRESS
+    # message["To"] = to_address if '@' in to_address else config.MAIL_ADDRESS_LOGGER
+    # message["Subject"] = subject
+    # message.attach(MIMEText(msg, "plain"))
+    # with smtplib.SMTP(smtp_server, smtp_port) as server:
+    #     server.starttls()
+    #     try:
+    #         server.login(smtp_username, smtp_password)
+    #         server.sendmail(config.MAIL_ADDRESS, message["To"], message.as_string())
+    #     except smtplib.SMTPAuthenticationError as e:
+    #         print('\n{}\n{}'.format(e, config.MAIL_ADDRESS.replace('@', '')))
+    #         warnings.warn(str(e), category=UserWarning)
 
-        account = Account(
-            EXCHANGE_EMAIL,
-            credentials=credentials,
-            autodiscover=False,
-            default_timezone=tz,
-            config=config,
-        )
-        recipients = [Mailbox(email_address=recipient) for recipient in RECIPIENTS]
-        mail = Message(
-            account=account,
-            folder=account.sent,
-            subject=EMAIL_SUBJECT_PREFIX + subject,
-            body=body,
-            to_recipients=recipients,
-        )
-        mail.send_and_save()
-    except Exception as ex:
-        logger.warning(
-            f"Couldn't send feedback email. Exception raised: {traceback.format_exc()}."
-        )
-        raise ex
+    pass
+    # tz = EWSTimeZone(TIME_ZONE)
+    # try:
+    #     credentials = Credentials(EXCHANGE_ACCOUNT, EXCHANGE_PW)
+    #
+    #     config = Configuration(server=EXCHANGE_SERVER, credentials=credentials)
+    #
+    #     account = Account(
+    #         EXCHANGE_EMAIL,
+    #         credentials=credentials,
+    #         autodiscover=False,
+    #         default_timezone=tz,
+    #         config=config,
+    #     )
+    #     recipients = [Mailbox(email_address=recipient) for recipient in RECIPIENTS]
+    #     mail = Message(
+    #         account=account,
+    #         folder=account.sent,
+    #         subject=EMAIL_SUBJECT_PREFIX + subject,
+    #         body=body,
+    #         to_recipients=recipients,
+    #     )
+    #     mail.send_and_save()
+    # except Exception as ex:
+    #     logger.warning(
+    #         f"Couldn't send feedback email. Exception raised: {traceback.format_exc()}."
+    #     )
+    #     raise ex
 
 
 def send_email(*, to_email, subject, message):
@@ -162,68 +186,68 @@ def send_email(*, to_email, subject, message):
     """
     prefixed_subject = EMAIL_SUBJECT_PREFIX + subject
 
-    if USE_EXCHANGE_EMAIL_BACKEND is True:
-
-        tz = EWSTimeZone(TIME_ZONE)
-        credentials = Credentials(EXCHANGE_ACCOUNT, EXCHANGE_PW)
-        config = Configuration(server=EXCHANGE_SERVER, credentials=credentials)
-
-        try:
-            account = Account(
-                EXCHANGE_EMAIL,
-                credentials=credentials,
-                autodiscover=False,
-                default_timezone=tz,
-                config=config,
-            )
-        except ConnectionError as err:
-            err_msg = _("Form - connection error:") + f" {err}"
-            logger.error(err_msg)
-            return False
-        except Exception as err:  # pylint: disable=broad-except
-            err_msg = _("Form - other error:") + f" {err}"
-            logger.error(err_msg)
-            return False
-
-        recipients = [Mailbox(email_address=to_email)]
-
-        msg = Message(
-            account=account,
-            folder=account.sent,
-            subject=prefixed_subject,
-            body=message,
-            to_recipients=recipients,
-        )
-
-        try:
-            msg.send_and_save()
-            return True
-        except Exception as err:  # pylint: disable=broad-except
-            err_msg = _("Form - mail sending error:") + f" {err}"
-            logger.error(err_msg)
-            return False
-    elif USE_EXCHANGE_EMAIL_BACKEND is False:
-        print(
-            "\n",
-            "--- No email is send ---",
-            "\n\n",
-            "To:",
-            to_email,
-            "\n\n",
-            "Subject:",
-            prefixed_subject,
-            "\n\n",
-            "Message:",
-            message,
-            "\n",
-        )
-        return True
-    else:
-        raise ValueError(
-            "Email backend not configured.",
-            "USE_EXCHANGE_EMAIL_BACKEND must be boolean of either True or False.",
-        )
-        return False
+    # if USE_EXCHANGE_EMAIL_BACKEND is True:
+    #
+    #     tz = EWSTimeZone(TIME_ZONE)
+    #     credentials = Credentials(EXCHANGE_ACCOUNT, EXCHANGE_PW)
+    #     config = Configuration(server=EXCHANGE_SERVER, credentials=credentials)
+    #
+    #     try:
+    #         account = Account(
+    #             EXCHANGE_EMAIL,
+    #             credentials=credentials,
+    #             autodiscover=False,
+    #             default_timezone=tz,
+    #             config=config,
+    #         )
+    #     except ConnectionError as err:
+    #         err_msg = _("Form - connection error:") + f" {err}"
+    #         logger.error(err_msg)
+    #         return False
+    #     except Exception as err:  # pylint: disable=broad-except
+    #         err_msg = _("Form - other error:") + f" {err}"
+    #         logger.error(err_msg)
+    #         return False
+    #
+    #     recipients = [Mailbox(email_address=to_email)]
+    #
+    #     msg = Message(
+    #         account=account,
+    #         folder=account.sent,
+    #         subject=prefixed_subject,
+    #         body=message,
+    #         to_recipients=recipients,
+    #     )
+    #
+    #     try:
+    #         msg.send_and_save()
+    #         return True
+    #     except Exception as err:  # pylint: disable=broad-except
+    #         err_msg = _("Form - mail sending error:") + f" {err}"
+    #         logger.error(err_msg)
+    #         return False
+    # elif USE_EXCHANGE_EMAIL_BACKEND is False:
+    #     print(
+    #         "\n",
+    #         "--- No email is send ---",
+    #         "\n\n",
+    #         "To:",
+    #         to_email,
+    #         "\n\n",
+    #         "Subject:",
+    #         prefixed_subject,
+    #         "\n\n",
+    #         "Message:",
+    #         message,
+    #         "\n",
+    #     )
+    #     return True
+    # else:
+    #     raise ValueError(
+    #         "Email backend not configured.",
+    #         "USE_EXCHANGE_EMAIL_BACKEND must be boolean of either True or False.",
+    #     )
+    #     return False
 
 
 def excuses_design_under_development(request, link=False):

@@ -1,8 +1,12 @@
 import json
 import uuid
 from datetime import timedelta
+try:
+    from oemof.thermal.compression_heatpumps_and_chillers import _calc_cops
+except ModuleNotFoundError:
+    def _calc_cops(*args):
+        pass
 
-import oemof.thermal.compression_heatpumps_and_chillers as cmpr_hp_chiller
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -591,7 +595,7 @@ class COPCalculator(models.Model):
         return answer
 
     def calc_cops(self):
-        cops = cmpr_hp_chiller.calc_cops(
+        cops = _calc_cops(
             temp_high=self.temp_high,
             temp_low=self.temp_low,
             mode=self.mode,
