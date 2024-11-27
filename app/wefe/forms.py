@@ -70,10 +70,11 @@ class EconomicProjectForm(OpenPlanModelForm):
     def __init__(self, *args, **kwargs):
         instance = kwargs.get("instance", None)
         super().__init__(*args, **kwargs)
-        self.fields["currency"].initial = "NGN"
+        initial_currency = "USD"
+        self.fields["currency"].initial = initial_currency
 
         if instance is None:
-            self.fields["exchange_rate"].initial = request_exchange_rate("NGN")
+            self.fields["exchange_rate"].initial = request_exchange_rate(initial_currency)
 
 
 class EconomicDataForm(OpenPlanModelForm):
