@@ -224,9 +224,15 @@ def wefe_demand(request, proj_id, step_id=STEP_MAPPING["demand"]):
 
     if request.method == "GET":
         dummy_data = pd.read_csv("static/wefe_aggregated_demands_dummy.csv", index_col="datetime", decimal=",")
-
+        dummy_data = dummy_data.head(168)
+        water_demand = dummy_data.loc[:, dummy_data.columns.str.contains("water")]
+        electricity_demand = dummy_data.loc[:, ~dummy_data.columns.str.contains("water")]
         context.update(
-            {"timestamps": scenario.get_timestamps(json_format=True), "demand_data": dummy_data.to_dict(orient="list")}
+            {
+                "timestamps": scenario.get_timestamps(json_format=True),
+                "water_demand": water_demand.to_dict(orient="list"),
+                "electricity_demand": electricity_demand.to_dict(orient="list"),
+            }
         )
 
         return render(request, "wefe/steps/demand.html", context)
