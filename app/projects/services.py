@@ -268,7 +268,7 @@ def get_selected_scenarios_in_cache(request, proj_id):
     return [int(scen_id) for scen_id in selected_scenario]
 
 
-class RenewableNinjas:
+class RenewablesNinja:
     token = os.environ["RN_API_TOKEN"]
     api_base = "https://www.renewables.ninja/api/"
 
@@ -298,6 +298,7 @@ class RenewableNinjas:
             "tilt": coordinates["lat"],
             "azim": 180,
             "format": "json",
+            "raw": "true",
         }
 
         r = self.s.get(url, params=args)

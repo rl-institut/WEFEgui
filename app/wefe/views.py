@@ -27,7 +27,7 @@ from business_model.models import *
 from cp_nigeria.models import ConsumerGroup
 from cp_nigeria.helpers import ReportHandler
 from projects.forms import UploadFileForm, ProjectShareForm, ProjectRevokeForm, UseCaseForm
-from projects.services import RenewableNinjas
+from projects.services import RenewablesNinja
 from projects.constants import DONE, PENDING, ERROR
 from projects.views import request_mvs_simulation, simulation_cancel
 from business_model.helpers import B_MODELS
