@@ -1,11 +1,14 @@
 import json
 import uuid
 from datetime import timedelta
+
 try:
     from oemof.thermal.compression_heatpumps_and_chillers import _calc_cops
-except ModuleNotFoundError:
+except ImportError:
+
     def _calc_cops(*args):
         pass
+
 
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
