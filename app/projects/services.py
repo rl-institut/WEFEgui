@@ -303,12 +303,7 @@ class RenewablesNinja:
 
         r = self.s.get(url, params=args)
         logger.info("Sending request to renewables.ninja")
-
-        # Parse JSON to get a pandas.DataFrame of data and dict of metadata
-        parsed_response = json.loads(r.text)
-        data = pd.read_json(StringIO(json.dumps(parsed_response["data"])), orient="index")
-        metadata = parsed_response["metadata"]
-
+        data = self.fetch_and_parse_data(r)
         self.data["pv"] = data
         return
 
@@ -332,10 +327,28 @@ class RenewablesNinja:
         }
 
         r = self.s.get(url, params=args)
-
-        parsed_response = json.loads(r.text)
-        data = pd.read_json(StringIO(json.dumps(parsed_response["data"])), orient="index")
-        metadata = parsed_response["metadata"]
-
+        data = self.fetch_and_parse_data(r)
         self.data["wind"] = data
         return
+
+    @staticmethod
+    def fetch_and_parse_data(r):
+        """
+        Fetch data from the API, parse it, and handle errors.
+        """
+        try:
+            r.raise_for_status()  # Raise HTTPError for bad responses (4xx and 5xx)
+            parsed_response = json.loads(r.text)
+            data = pd.read_json(StringIO(json.dumps(parsed_response["data"])), orient="index")
+            metadata = parsed_response["metadata"]
+            return data
+
+        except json.decoder.JSONDecodeError as e:
+            logger.error(f"An error occurred while fetching the data from renewables.ninja: {e}")
+            # TODO: Set some default timeseries if needed
+            return {"default": []}
+
+        except Exception as e:
+            logger.error(f"An error occurred while fetching the data from renewables.ninja: {e}")
+            # TODO: Set some default timeseries if needed
+            return {"default": []}

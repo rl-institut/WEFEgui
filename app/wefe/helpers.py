@@ -1,6 +1,8 @@
 import numpy as np
 from django.templatetags.static import static
-from pyomo.core.kernel.suffix import suffix
+import logging
+
+logger = logging.getLogger(__name__)
 
 from projects.models import Project, Timeseries
 from projects.services import RenewablesNinja
@@ -37,7 +39,12 @@ def get_renewables_output(proj_id, raw=True):
 
         for ts, name in zip([pv_ts, wind_ts], ["pv", "wind"]):
             data = location.data[name]
-            ts.values = np.squeeze(data[suffixes[name]]).tolist()
+            try:
+                ts.values = np.squeeze(data[suffixes[name]]).tolist()
+            except KeyError:
+                # For the case that data fetching from renewables.ninja did not work
+                # TODO decide how to handle case and if to set default in RN.fetch_and_parse_data()
+                return None, None
             ts.start_time = data.index[0]
             ts.end_time = data.index[-1]
             ts.time_step = 60
