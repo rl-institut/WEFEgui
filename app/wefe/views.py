@@ -164,7 +164,7 @@ def wefe_resources(request, proj_id, step_id=STEP_MAPPING["resources"]):
         raise PermissionDenied
 
     scenario = project.scenario
-    page_information = "About selecting resources"
+    page_information = "Renewable energy potential for the selected site"
     context = {
         "proj_id": proj_id,
         "proj_name": project.name,
@@ -174,7 +174,16 @@ def wefe_resources(request, proj_id, step_id=STEP_MAPPING["resources"]):
     }
 
     if request.method == "GET":
-        # TODO
+        pv_ts, wind_ts = get_renewables_output(proj_id, raw=True)
+        context.update(
+            {
+                "timestamps": scenario.get_timestamps(json_format=True),
+                "pv_ts": pv_ts,
+                "wind_ts": wind_ts,
+                "test": "test",
+            }
+        )
+
         return render(request, "wefe/steps/resources.html", context)
 
     if request.method == "POST":

@@ -12,6 +12,14 @@
 
 {% block start_body_scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.min.js" integrity="sha512-Y8iWYJDo6HiTo5xtml1g4QqHtl/PO1w+dmUpQfQSOTqKNsMhExfyPN2ncNAe9JuJUSKzwK/b6oaNPop4MXzkwg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.20.0/plotly.min.js" integrity="sha512-tuzZby9zsxdCMgqKMHo+ObEWrfBTFlKZ7yIHSow5IYbr0JseLNTXm37NSn0rrWVbvKMfvGUCSm5L1sK9QGuLyw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="{% static 'js/traceplot.js' %}"></script>
+<script>
+	var pv_ts = {{ pv_ts }};
+	var wind_ts = {{ wind_ts }};
+	var timestamps = {{ timestamps | safe }};
+	var test = {{ test }};
+</script>
 {% endblock start_body_scripts %}
 
 
@@ -25,6 +33,15 @@
 			{% csrf_token %}
 			<button id="submitFormBtn" style="display: none;" class="btn btn--medium" type="submit" value="test">{% translate "Create Scenario" %}</button>
 		</form>
+		<span> PV Potential (direct irradiance in W/m^2) </span>
+		<div id="pv_ts">
+
+		</div>
+		<span> Wind Potential (wind speed in m/s) </span>
+
+		<div id="wind_ts">
+
+		</div>
 	</section>
 </div>
 
@@ -35,4 +52,7 @@
 {% endblock next_btn %}
 
 {% block end_body_scripts %}
+
+<script>makePlotly(timestamps, pv_ts, plot_id="pv_ts",userLayout={hovermode:'x unified'})</script>
+<script>makePlotly(timestamps, wind_ts, plot_id="wind_ts",userLayout={hovermode:'x unified'})</script>
 {% endblock end_body_scripts %}
