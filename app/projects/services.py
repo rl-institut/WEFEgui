@@ -4,6 +4,8 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 
 import os
+from io import StringIO
+
 import requests
 import pandas as pd
 import numpy as np
@@ -274,15 +276,16 @@ class RenewableNinjas:
         self.s = requests.session()
         # Send token header with each request
         self.s.headers = {"Authorization": "Token " + self.token}
-        self.data = []
+        self.data = dict.fromkeys(["pv", "wind"])
 
-    def get_pv_output(self, coordinates):
+    def get_pv_data(self, coordinates):
         ##
         # Get PV data
         ##
 
         url = self.api_base + "data/pv"
 
+        # Panels are assumed to be latitude tilted
         args = {
             "lat": coordinates["lat"],
             "lon": coordinates["lon"],
@@ -292,24 +295,46 @@ class RenewableNinjas:
             "capacity": 1.0,
             "system_loss": 0.1,
             "tracking": 0,
-            "tilt": 35,
+            "tilt": coordinates["lat"],
             "azim": 180,
             "format": "json",
         }
 
         r = self.s.get(url, params=args)
+        logger.info("Sending request to renewables.ninja")
 
         # Parse JSON to get a pandas.DataFrame of data and dict of metadata
         parsed_response = json.loads(r.text)
-
-        pv_data = pd.read_json(json.dumps(parsed_response["data"]), orient="index")
+        data = pd.read_json(StringIO(json.dumps(parsed_response["data"])), orient="index")
         metadata = parsed_response["metadata"]
 
-        self.data = pv_data
+        self.data["pv"] = data
         return
 
-    def create_pv_graph(self):
-        date_range = pd.Series(pd.date_range("2019-01-01", "2019-12-31"))
-        daily_avg = [np.mean(self.data.loc[day.strftime("%Y-%m-%d")]) for day in date_range]
-        plot_div = plot([Scatter(x=date_range, y=daily_avg, mode="lines")], output_type="div")
-        return plot_div
+    def get_wind_data(self, coordinates):
+        ##
+        # Get Wind data
+        ##
+
+        url = self.api_base + "data/wind"
+
+        args = {
+            "lat": 34.125,
+            "lon": 39.814,
+            "date_from": "2015-01-01",
+            "date_to": "2015-12-31",
+            "capacity": 1.0,
+            "height": 100,
+            "turbine": "Vestas V80 2000",
+            "format": "json",
+            "raw": "true",
+        }
+
+        r = self.s.get(url, params=args)
+
+        parsed_response = json.loads(r.text)
+        data = pd.read_json(StringIO(json.dumps(parsed_response["data"])), orient="index")
+        metadata = parsed_response["metadata"]
+
+        self.data["wind"] = data
+        return
