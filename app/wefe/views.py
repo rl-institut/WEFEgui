@@ -213,7 +213,7 @@ def wefe_demand(request, proj_id, step_id=STEP_MAPPING["demand"]):
 
     scenario = project.scenario
 
-    page_information = "About demand"
+    page_information = "Please input demand data for the project site"
     context = {
         "proj_id": proj_id,
         "proj_name": project.name,
@@ -223,6 +223,12 @@ def wefe_demand(request, proj_id, step_id=STEP_MAPPING["demand"]):
     }
 
     if request.method == "GET":
+        dummy_data = pd.read_csv("static/wefe_aggregated_demands_dummy.csv", index_col="datetime", decimal=",")
+
+        context.update(
+            {"timestamps": scenario.get_timestamps(json_format=True), "demand_data": dummy_data.to_dict(orient="list")}
+        )
+
         return render(request, "wefe/steps/demand.html", context)
 
     if request.method == "POST":

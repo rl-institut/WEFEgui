@@ -12,17 +12,45 @@
 {% block start_body_scripts %}
 <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" crossorigin=""
         integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==">
-    </script>
-
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.20.0/plotly.min.js" integrity="sha512-tuzZby9zsxdCMgqKMHo+ObEWrfBTFlKZ7yIHSow5IYbr0JseLNTXm37NSn0rrWVbvKMfvGUCSm5L1sK9QGuLyw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+	var water_demand = {{ water_demand | safe }};
+	var electricity_demand = {{ electricity_demand | safe }};
+	var timestamps = {{ timestamps | safe }};
+</script>
 {% endblock start_body_scripts %}
 
 {% block progression_content %}
 <div>
 	<section class="container-lg">
-		<form method="POST" action=""> {# % url 'wefe_scenario' proj_id % #}
-			{% csrf_token %}
-			<button id="submitFormBtn" style="display: none;" class="btn btn--medium" type="submit" value="test">{% translate "Create Scenario" %}</button>
-		</form>
+		<div class="row" style="text-align:center">
+			<div class="col">
+				<p>
+				Generate demand profiles with RAMP based on on-site survey data collected via KoboToolbox <br>
+				</p>
+				<button type="button" class="btn btn--medium">Fetch survey data</button>
+			</div>
+			<div class="col">
+				<p>
+				Upload aggregated demand data. The uploaded file should contain the columns agro_processing, cooking,
+				drinking_water, electrical_appliances and service_water. <br>
+				</p>
+				<button type="button" class="btn btn--medium">Upload</button>
+			</div>
+		</div>
+		<br>
+		<br>
+		<br>
+		<div class="row" style="text-align:center">
+			<h4> Total demand overview</h4>
+		</div>
+		<span> Total water demand </span>
+		<div id="demand-water">
+		</div>
+		<span> Total electricity demand </span>
+		<div id="demand-elec">
+		</div>
 	</section>
 </div>
 
@@ -35,4 +63,34 @@
 
 
 {% block end_body_scripts %}
+<script>
+	function makeStackedPlotly(x, y, plot_id="",userLayout=null){
+		var traces = [];
+		var names = Object.keys(y);
+		var vals = Object.values(y);
+        var plotDiv = document.getElementById(plot_id);
+
+        for (var i = 0; i < names.length; i++) {
+			var trace = {
+				x: x,
+				y: vals[i],
+				stackgroup: 'one',
+				name: names[i],
+				};
+			traces.push(trace)
+		};
+
+		var layout = {
+            hovermode:'x unified'
+            };
+
+		plotLayout = userLayout;
+		Plotly.newPlot(plotDiv, traces, plotLayout);
+		// simulate a click on autoscale
+		plotDiv.querySelector('[data-title="Autoscale"]').click()
+};
+makeStackedPlotly(timestamps, water_demand, plot_id="demand-water", userLayout={hovermode:'x unified'})
+makeStackedPlotly(timestamps, electricity_demand, plot_id="demand-elec", userLayout={hovermode:'x unified'})
+
+</script>
 {% endblock end_body_scripts%}
