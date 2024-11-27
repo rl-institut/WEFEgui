@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_q.models import Schedule
+
 # from exchangelib import (
 #     Credentials,
 #     Account,
@@ -98,21 +99,17 @@ def create_or_delete_simulation_scheduler(**kwargs):
     mvs_token = kwargs.get("mvs_token", "")
 
     if Schedule.objects.count() == 0:
-        logger.info(
-            f"No Scheduler found. Creating a new Scheduler to check Simulation {mvs_token}."
-        )
+        logger.info(f"No Scheduler found. Creating a new Scheduler to check Simulation {mvs_token}.")
         schedule = Schedule.objects.create(
             name=f"djangoQ_Scheduler-{mvs_token}",
             func="projects.services.check_simulation_objects",
             # args='5',
             schedule_type=Schedule.MINUTES,
-            minutes=1
+            minutes=1,
             # kwargs={'test_arg': 1, 'test_arg2': "test"}
         )
         if schedule.id:
-            logger.info(
-                f"New Scheduler Created to track simulation {mvs_token} objects status."
-            )
+            logger.info(f"New Scheduler Created to track simulation {mvs_token} objects status.")
             return True
         else:
             logger.debug(f"Scheduler already exists for {mvs_token}. Skipping.")
@@ -313,10 +310,6 @@ class RenewableNinjas:
 
     def create_pv_graph(self):
         date_range = pd.Series(pd.date_range("2019-01-01", "2019-12-31"))
-        daily_avg = [
-            np.mean(self.data.loc[day.strftime("%Y-%m-%d")]) for day in date_range
-        ]
-        plot_div = plot(
-            [Scatter(x=date_range, y=daily_avg, mode="lines")], output_type="div"
-        )
+        daily_avg = [np.mean(self.data.loc[day.strftime("%Y-%m-%d")]) for day in date_range]
+        plot_div = plot([Scatter(x=date_range, y=daily_avg, mode="lines")], output_type="div")
         return plot_div
