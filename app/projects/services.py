@@ -315,10 +315,10 @@ class RenewablesNinja:
         url = self.api_base + "data/wind"
 
         args = {
-            "lat": 34.125,
-            "lon": 39.814,
-            "date_from": "2015-01-01",
-            "date_to": "2015-12-31",
+            "lat": coordinates["lat"],
+            "lon": coordinates["lon"],
+            "date_from": "2019-01-01",
+            "date_to": "2019-12-31",
             "capacity": 1.0,
             "height": 100,
             "turbine": "Vestas V80 2000",
