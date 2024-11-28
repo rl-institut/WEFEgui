@@ -27,7 +27,7 @@ from business_model.models import *
 from cp_nigeria.models import ConsumerGroup
 from cp_nigeria.helpers import ReportHandler
 from projects.forms import UploadFileForm, ProjectShareForm, ProjectRevokeForm, UseCaseForm
-from projects.services import RenewableNinjas
+from projects.services import RenewablesNinja
 from projects.constants import DONE, PENDING, ERROR
 from projects.views import request_mvs_simulation, simulation_cancel
 from business_model.helpers import B_MODELS
@@ -1329,8 +1329,8 @@ def cpn_simulation_request(request, proj_id=0):
 def get_pv_output(proj_id):
     project = Project.objects.get(id=proj_id)
     coordinates = {"lat": project.latitude, "lon": project.longitude}
-    location = RenewableNinjas()
-    location.get_pv_output(coordinates)
+    location = RenewablesNinja()
+    location.get_pv_data(coordinates)
     pv_ts, _ = Timeseries.objects.get_or_create(scenario=project.scenario, open_source=True, ts_type="source")
 
     pv_ts.values = np.squeeze(location.data.values).tolist()

@@ -27,7 +27,7 @@ from business_model.models import *
 from cp_nigeria.models import ConsumerGroup
 from cp_nigeria.helpers import ReportHandler
 from projects.forms import UploadFileForm, ProjectShareForm, ProjectRevokeForm, UseCaseForm
-from projects.services import RenewableNinjas
+from projects.services import RenewablesNinja
 from projects.constants import DONE, PENDING, ERROR
 from projects.views import request_mvs_simulation, simulation_cancel
 from business_model.helpers import B_MODELS
@@ -106,6 +106,16 @@ def wefe_choose_location(request, proj_id=None, step_id=STEP_MAPPING["choose_loc
             form = ProjectForm(request.POST)
             economic_data = EconomicProjectForm(request.POST)
         if form.is_valid() and economic_data.is_valid():
+            # If the project location has changed, delete existing weather data
+            if project is not None and any(field in form.changed_data for field in ["latitude", "longitude"]):
+                pv_data_qs = Timeseries.objects.filter(name__contains="pv_ts_", scenario=project.scenario)
+                wind_data_qs = Timeseries.objects.filter(name__contains="wind_ts_", scenario=project.scenario)
+
+                for qs in [pv_data_qs, wind_data_qs]:
+                    if qs.exists():
+                        print(f"deleting timeseries {[q.name for q in qs]}")
+                        qs.delete()
+
             economic_data = economic_data.save(commit=False)
             # set the initial values for discount and tax
             economic_data.discount = 0.12
@@ -164,7 +174,7 @@ def wefe_resources(request, proj_id, step_id=STEP_MAPPING["resources"]):
         raise PermissionDenied
 
     scenario = project.scenario
-    page_information = "About selecting resources"
+    page_information = "Renewable energy potential for the selected site"
     context = {
         "proj_id": proj_id,
         "proj_name": project.name,
@@ -174,7 +184,16 @@ def wefe_resources(request, proj_id, step_id=STEP_MAPPING["resources"]):
     }
 
     if request.method == "GET":
-        # TODO
+        pv_ts, wind_ts = get_renewables_output(proj_id, raw=True)
+        context.update(
+            {
+                "timestamps": scenario.get_timestamps(json_format=True),
+                "pv_ts": pv_ts,
+                "wind_ts": wind_ts,
+                "test": "test",
+            }
+        )
+
         return render(request, "wefe/steps/resources.html", context)
 
     if request.method == "POST":

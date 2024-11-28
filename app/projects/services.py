@@ -4,6 +4,8 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 
 import os
+from io import StringIO
+
 import requests
 import pandas as pd
 import numpy as np
@@ -15,6 +17,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_q.models import Schedule
+
 # from exchangelib import (
 #     Credentials,
 #     Account,
@@ -98,21 +101,17 @@ def create_or_delete_simulation_scheduler(**kwargs):
     mvs_token = kwargs.get("mvs_token", "")
 
     if Schedule.objects.count() == 0:
-        logger.info(
-            f"No Scheduler found. Creating a new Scheduler to check Simulation {mvs_token}."
-        )
+        logger.info(f"No Scheduler found. Creating a new Scheduler to check Simulation {mvs_token}.")
         schedule = Schedule.objects.create(
             name=f"djangoQ_Scheduler-{mvs_token}",
             func="projects.services.check_simulation_objects",
             # args='5',
             schedule_type=Schedule.MINUTES,
-            minutes=1
+            minutes=1,
             # kwargs={'test_arg': 1, 'test_arg2': "test"}
         )
         if schedule.id:
-            logger.info(
-                f"New Scheduler Created to track simulation {mvs_token} objects status."
-            )
+            logger.info(f"New Scheduler Created to track simulation {mvs_token} objects status.")
             return True
         else:
             logger.debug(f"Scheduler already exists for {mvs_token}. Skipping.")
@@ -269,7 +268,7 @@ def get_selected_scenarios_in_cache(request, proj_id):
     return [int(scen_id) for scen_id in selected_scenario]
 
 
-class RenewableNinjas:
+class RenewablesNinja:
     token = os.environ["RN_API_TOKEN"]
     api_base = "https://www.renewables.ninja/api/"
 
@@ -277,15 +276,16 @@ class RenewableNinjas:
         self.s = requests.session()
         # Send token header with each request
         self.s.headers = {"Authorization": "Token " + self.token}
-        self.data = []
+        self.data = dict.fromkeys(["pv", "wind"])
 
-    def get_pv_output(self, coordinates):
+    def get_pv_data(self, coordinates):
         ##
         # Get PV data
         ##
 
         url = self.api_base + "data/pv"
 
+        # Panels are assumed to be latitude tilted
         args = {
             "lat": coordinates["lat"],
             "lon": coordinates["lon"],
@@ -295,28 +295,60 @@ class RenewableNinjas:
             "capacity": 1.0,
             "system_loss": 0.1,
             "tracking": 0,
-            "tilt": 35,
+            "tilt": coordinates["lat"],
             "azim": 180,
             "format": "json",
+            "raw": "true",
         }
 
         r = self.s.get(url, params=args)
-
-        # Parse JSON to get a pandas.DataFrame of data and dict of metadata
-        parsed_response = json.loads(r.text)
-
-        pv_data = pd.read_json(json.dumps(parsed_response["data"]), orient="index")
-        metadata = parsed_response["metadata"]
-
-        self.data = pv_data
+        logger.info("Sending request to renewables.ninja")
+        data = self.fetch_and_parse_data(r)
+        self.data["pv"] = data
         return
 
-    def create_pv_graph(self):
-        date_range = pd.Series(pd.date_range("2019-01-01", "2019-12-31"))
-        daily_avg = [
-            np.mean(self.data.loc[day.strftime("%Y-%m-%d")]) for day in date_range
-        ]
-        plot_div = plot(
-            [Scatter(x=date_range, y=daily_avg, mode="lines")], output_type="div"
-        )
-        return plot_div
+    def get_wind_data(self, coordinates):
+        ##
+        # Get Wind data
+        ##
+
+        url = self.api_base + "data/wind"
+
+        args = {
+            "lat": coordinates["lat"],
+            "lon": coordinates["lon"],
+            "date_from": "2019-01-01",
+            "date_to": "2019-12-31",
+            "capacity": 1.0,
+            "height": 100,
+            "turbine": "Vestas V80 2000",
+            "format": "json",
+            "raw": "true",
+        }
+
+        r = self.s.get(url, params=args)
+        data = self.fetch_and_parse_data(r)
+        self.data["wind"] = data
+        return
+
+    @staticmethod
+    def fetch_and_parse_data(r):
+        """
+        Fetch data from the API, parse it, and handle errors.
+        """
+        try:
+            r.raise_for_status()  # Raise HTTPError for bad responses (4xx and 5xx)
+            parsed_response = json.loads(r.text)
+            data = pd.read_json(StringIO(json.dumps(parsed_response["data"])), orient="index")
+            metadata = parsed_response["metadata"]
+            return data
+
+        except json.decoder.JSONDecodeError as e:
+            logger.error(f"An error occurred while fetching the data from renewables.ninja: {e}")
+            # TODO: Set some default timeseries if needed
+            return {"default": []}
+
+        except Exception as e:
+            logger.error(f"An error occurred while fetching the data from renewables.ninja: {e}")
+            # TODO: Set some default timeseries if needed
+            return {"default": []}
