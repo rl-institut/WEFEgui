@@ -106,6 +106,16 @@ def wefe_choose_location(request, proj_id=None, step_id=STEP_MAPPING["choose_loc
             form = ProjectForm(request.POST)
             economic_data = EconomicProjectForm(request.POST)
         if form.is_valid() and economic_data.is_valid():
+            # If the project location has changed, delete existing weather data
+            if project is not None and any(field in form.changed_data for field in ["latitude", "longitude"]):
+                pv_data_qs = Timeseries.objects.filter(name__contains="pv_ts_", scenario=project.scenario)
+                wind_data_qs = Timeseries.objects.filter(name__contains="wind_ts_", scenario=project.scenario)
+
+                for qs in [pv_data_qs, wind_data_qs]:
+                    if qs.exists():
+                        print(f"deleting timeseries {[q.name for q in qs]}")
+                        qs.delete()
+
             economic_data = economic_data.save(commit=False)
             # set the initial values for discount and tax
             economic_data.discount = 0.12
