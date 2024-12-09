@@ -13,4 +13,7 @@ urlpatterns = [
     path("project/delete/<int:proj_id>", wefe_project_delete, name="wefe_project_delete"),
     path("<int:proj_id>/edit/create", wefe_choose_location, name="wefe_scenario_create"),
     path("<int:proj_id>/edit/submit", wefe_choose_location, name="wefe_scenario_submit"),
+    path("<int:proj_id>/survey", wefe_system_layout, name="view_survey_questions"),
+    path("<int:proj_id>/submit/survey", wefe_system_layout, name="submit_survey"),
+    path("<int:proj_id>/view/survey", wefe_system_layout, name="view_survey"),
 ]
