@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" crossorigin=""
         integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" />
 <link rel="stylesheet" href="{% static 'css/map.css' %}" type="text/css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 {% endblock head_block %}
 
 {% block start_body_scripts %}
@@ -14,15 +15,54 @@
         integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==">
     </script>
 
+<script src="{% static 'js/wefedemand_requests.js' %}"></script>
+
 {% endblock start_body_scripts %}
 
 {% block progression_content %}
 <div>
 	<section class="container-lg">
+		<h1>Test WEFE-Demand API</h1>
+		<form method="POST">
+			{% csrf_token %}
+			<button type="submit" name="action" value="process_survey">Process Survey</button>
+			<button type="submit" name="action" value="ramp_simulation">Run Ramp Simulation</button>
+		</form>
+
+		{% if response %}
+		<div class="response">
+			<h3>Response:</h3>
+			<pre>{{ response|safe }}</pre>
+		</div>
+		{% endif %}
 		<form method="POST" action=""> {# % url 'wefe_scenario' proj_id % #}
 			{% csrf_token %}
 			<button id="submitFormBtn" style="display: none;" class="btn btn--medium" type="submit" value="test">{% translate "Create Scenario" %}</button>
 		</form>
+	</section>
+</div>
+
+<div>
+	<section class="container-lg">
+		<h1>Test WEFE-Demand API</h1>
+		{% if not survey_id %}
+		<div>
+			<button id="survey_button" class="btn btn--medium" onclick="javascript:generateSurveyLink({{ proj_id }})" style="margin-top:0.5rem">
+				Generate survey link
+				<span id="loading_spinner" style="display:none; margin-top: 0.5rem">
+				  <i class="fa fa-circle-o-notch fa-spin"></i>
+			</span>
+			</button>
+
+		</div>
+		<div id="link_display">
+
+		</div>
+		{% else %}
+		<div>
+			Use the following link to fill out the questionnaire <a href="{{survey_url}}">{{ survey_url }} </a>
+		</div>
+		{% endif %}
 	</section>
 </div>
 
@@ -35,4 +75,8 @@
 
 
 {% block end_body_scripts %}
+<script>
+	const urlGenerateSurveyLink = `{% url 'ajax_generate_survey_link' %}`;
+</script>
+
 {% endblock end_body_scripts%}

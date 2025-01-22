@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
+
 import ast
 import os
 
@@ -113,19 +114,21 @@ WSGI_APPLICATION = "epa.wsgi.application"
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 # SQLite is used if no other database system is set via environment variables.
 DATABASES = {
-    "default": {
-        "ENGINE": os.environ.get("SQL_ENGINE"),
-        "NAME": os.environ.get("SQL_DATABASE"),
-        "USER": os.environ.get("SQL_USER"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD"),
-        "HOST": os.environ.get("SQL_HOST"),
-        "PORT": os.environ.get("SQL_PORT"),
-    }
-    if os.environ.get("SQL_ENGINE")
-    else {
-        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR, "db.sqlite3")),
-    }
+    "default": (
+        {
+            "ENGINE": os.environ.get("SQL_ENGINE"),
+            "NAME": os.environ.get("SQL_DATABASE"),
+            "USER": os.environ.get("SQL_USER"),
+            "PASSWORD": os.environ.get("SQL_PASSWORD"),
+            "HOST": os.environ.get("SQL_HOST"),
+            "PORT": os.environ.get("SQL_PORT"),
+        }
+        if os.environ.get("SQL_ENGINE")
+        else {
+            "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+            "NAME": os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR, "db.sqlite3")),
+        }
+    )
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
@@ -205,6 +208,10 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 # API token to fetch exchange rates
 EXCHANGE_RATES_API_TOKEN = os.getenv("EXCHANGE_RATES_API_TOKEN")
 EXCHANGE_RATES_URL = f"https://v6.exchangerate-api.com/v6/{EXCHANGE_RATES_API_TOKEN}/latest/USD"
+
+# API to connect with KoboToolbox
+KOBO_API_URL = "https://kf.kobotoolbox.org/api/v2/"
+KOBO_API_TOKEN = os.getenv("KOBO_API_TOKEN")
 
 import sys
 

@@ -35,6 +35,7 @@ from dashboard.models import KPIScalarResults, KPICostsMatrixResults, FancyResul
 from dashboard.helpers import KPI_PARAMETERS
 from .models import SurveyAnswer
 from .survey import SURVEY_CATEGORIES, SURVEY_QUESTIONS_CATEGORIES
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -216,19 +217,63 @@ def wefe_demand(request, proj_id, step_id=STEP_MAPPING["demand"]):
     scenario = project.scenario
 
     page_information = "About demand"
-    context = {
-        "proj_id": proj_id,
-        "proj_name": project.name,
-        "step_id": step_id,
-        "step_list": WEFE_STEP_VERBOSE,
-        "page_information": page_information,
-    }
 
     if request.method == "GET":
+        context = {
+            "proj_id": proj_id,
+            "proj_name": project.name,
+            "step_id": step_id,
+            "step_list": WEFE_STEP_VERBOSE,
+            "page_information": page_information,
+        }
+
+        if project.kobo_survey_id is not None:
+            context.update({"survey_id": project.kobo_survey_id, "survey_url": project.kobo_survey_url})
+
+        # if os.path.exists(output_path):
+        #     output_data = pd.read_csv(f"wefe/demand_data/{SURVEY_KEY}/.csv", index_col="datetime", decimal=",")
+        #     water_demand = output_data.loc[:, output_data.columns.str.contains("water")]
+        #     electricity_demand = output_data.loc[:, ~output_data.columns.str.contains("water")]
+        #     context.update(
+        #         {
+        #             "timestamps": scenario.get_timestamps(json_format=True),
+        #             "water_demand": water_demand.to_dict(orient="list"),
+        #             "electricity_demand": electricity_demand.to_dict(orient="list"),
+        #         }
+        #     )
+
         return render(request, "wefe/steps/demand.html", context)
 
     if request.method == "POST":
-        # TODO
+        # TODO this will likely be integrated into an AJAX call
+        #     action = request.POST.get("action")
+        #     url = ""
+        #     data = {}
+        #
+        #     if action == "process_survey":
+        #         url = "http://127.0.0.1:5000/preprocessing"
+        #         data = {
+        #             "script": "preprocessing_demo.py",
+        #             "args": {
+        #                 "id": 576013455,
+        #             },
+        #         }
+        #     #     http://wefe-demand:5000
+        #     elif action == "ramp_simulation":
+        #         url = "http://127.0.0.1:5000/ramp-simulation"
+        #         data = {
+        #             "script": "ramp_simulation_demo.py",
+        #             "args": {
+        #                 "id": 576013455,
+        #             },
+        #         }
+        #
+        #     try:
+        #         api_response = requests.post(url, json=data)
+        #         response = api_response.json()
+        #     except Exception as e:
+        #         response = {"error": str(e)}
+        #
         return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
 
 
@@ -491,3 +536,26 @@ def wefe_project_duplicate(request, proj_id):
         options.project = Project.objects.get(pk=new_proj_id)
         options.save()
     return HttpResponseRedirect(reverse("projects_list_cpn", args=[new_proj_id]))
+
+
+@login_required
+def ajax_generate_survey_link(request):
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        proj_id = int(request.GET.get("proj_id"))
+        project = get_object_or_404(Project, id=proj_id)
+        kobo = KoboHandler(project)
+        project_survey_id = kobo.clone_form(kobo.base_survey_id)
+        project_survey_url = kobo.deploy_form(project_survey_id)
+        kobo.assign_permissions("add_submissions", "AnonymousUser", survey_id=project_survey_id)
+        kobo.assign_permissions("view_asset", "AnonymousUser", survey_id=project_survey_id)
+
+        # update the project attributes
+        project.kobo_survey_id = project_survey_id
+        project.kobo_survey_url = project_survey_url
+        project.save()
+        return JsonResponse({"url": project_survey_url})
+
+
+@login_required
+def ajax_process_survey(request):
+    pass
