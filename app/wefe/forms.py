@@ -33,7 +33,7 @@ class ProjectForm(OpenPlanModelForm):
 
     class Meta:
         model = Project
-        exclude = ("country", "user", "viewers", "economic_data")
+        exclude = ("country", "user", "viewers", "economic_data", "kobo_survey_id", "kobo_survey_url")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

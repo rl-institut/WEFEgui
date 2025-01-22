@@ -83,6 +83,8 @@ class Project(models.Model):
     economic_data = models.OneToOneField(EconomicData, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
     viewers = models.ManyToManyField(Viewer, related_name="viewer_projects")
+    kobo_survey_id = models.CharField(max_length=50, null=True)
+    kobo_survey_url = models.CharField(max_length=100, null=True)
 
     def __str__(self):
         return self.name
