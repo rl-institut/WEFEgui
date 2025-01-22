@@ -22,6 +22,19 @@
 {% block progression_content %}
 <div>
 	<section class="container-lg">
+		<h1>Test WEFE-Demand API</h1>
+		<form method="POST">
+			{% csrf_token %}
+			<button type="submit" name="action" value="process_survey">Process Survey</button>
+			<button type="submit" name="action" value="ramp_simulation">Run Ramp Simulation</button>
+		</form>
+
+		{% if response %}
+		<div class="response">
+			<h3>Response:</h3>
+			<pre>{{ response|safe }}</pre>
+		</div>
+		{% endif %}
 		<form method="POST" action=""> {# % url 'wefe_scenario' proj_id % #}
 			{% csrf_token %}
 			<button id="submitFormBtn" style="display: none;" class="btn btn--medium" type="submit" value="test">{% translate "Create Scenario" %}</button>
