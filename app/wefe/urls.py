@@ -16,4 +16,5 @@ urlpatterns = [
     path("<int:proj_id>/survey", wefe_system_layout, name="view_survey_questions"),
     path("<int:proj_id>/submit/survey", wefe_system_layout, name="submit_survey"),
     path("<int:proj_id>/view/survey", wefe_system_layout, name="view_survey"),
+    path("ajax/generate-survey-link", ajax_generate_survey_link, name="ajax_generate_survey_link"),
 ]

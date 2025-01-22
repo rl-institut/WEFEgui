@@ -216,15 +216,19 @@ def wefe_demand(request, proj_id, step_id=STEP_MAPPING["demand"]):
     scenario = project.scenario
 
     page_information = "About demand"
-    context = {
-        "proj_id": proj_id,
-        "proj_name": project.name,
-        "step_id": step_id,
-        "step_list": WEFE_STEP_VERBOSE,
-        "page_information": page_information,
-    }
 
     if request.method == "GET":
+        context = {
+            "proj_id": proj_id,
+            "proj_name": project.name,
+            "step_id": step_id,
+            "step_list": WEFE_STEP_VERBOSE,
+            "page_information": page_information,
+        }
+
+        if project.kobo_survey_id is not None:
+            context.update({"survey_id": project.kobo_survey_id, "survey_url": project.kobo_survey_url})
+
         return render(request, "wefe/steps/demand.html", context)
 
     if request.method == "POST":
@@ -491,3 +495,26 @@ def wefe_project_duplicate(request, proj_id):
         options.project = Project.objects.get(pk=new_proj_id)
         options.save()
     return HttpResponseRedirect(reverse("projects_list_cpn", args=[new_proj_id]))
+
+
+@login_required
+def ajax_generate_survey_link(request):
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        proj_id = int(request.GET.get("proj_id"))
+        project = get_object_or_404(Project, id=proj_id)
+        kobo = KoboHandler(project)
+        project_survey_id = kobo.clone_form(kobo.base_survey_id)
+        project_survey_url = kobo.deploy_form(project_survey_id)
+        kobo.assign_permissions("add_submissions", "AnonymousUser", survey_id=project_survey_id)
+        kobo.assign_permissions("view_asset", "AnonymousUser", survey_id=project_survey_id)
+
+        # update the project attributes
+        project.kobo_survey_id = project_survey_id
+        project.kobo_survey_url = project_survey_url
+        project.save()
+        return JsonResponse({"url": project_survey_url})
+
+
+@login_required
+def ajax_process_survey(request):
+    pass
