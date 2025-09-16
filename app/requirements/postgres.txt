@@ -18,3 +18,4 @@ requests
 XlsxWriter
 whitenoise
 django-sass-processor
+environ
