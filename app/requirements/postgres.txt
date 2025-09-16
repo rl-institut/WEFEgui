@@ -16,3 +16,5 @@ plotly
 python-docx
 requests
 XlsxWriter
+whitenoise
+django-sass-processor
