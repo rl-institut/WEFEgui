@@ -1,0 +1,100 @@
+{% extends 'wefe/steps/step_progression.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load tags_utils %}
+
+
+{% block head_block %}
+<link rel="stylesheet" href="{% static 'css/survey_style.css' %}" type="text/css">
+
+{% endblock head_block %}
+
+<!-- WRITE HTML CODE WITHIN THESE block content TAGS -->
+{% block progression_content %}
+
+
+<section class="container-lg">
+	<div class="row">
+		<div class="col">
+			<p>Welcome to the survey</p>
+			<form id="surveyQuestions" action="{% url 'submit_survey' scen_id %}" method="POST">
+				{% csrf_token %}
+				<div class="container accordion" id="accordionQuestions">
+					{% for cat in categories %}
+					<div class="row align-items-start accordion-item">
+						<h3 class="accordion-header" style="background-color: #F5DA89" id="heading-{{ forloop.counter }}">
+							<button class="accordion-button" style="background-color: #F5DA89" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse-{{ forloop.counter }}">
+								{{ categories_verbose|get_item:cat }}
+							</button>
+						</h3>
+
+						<div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading-{{ forloop.counter }}" data-bs-parent="#accordionQuestions">
+							<div class="accordion-body cpn-business__questionnaire">
+								{% setvar False as matrix_current %}
+								{% for field in form %}
+									{% if categories_map|get_index:forloop.counter0|is_current_category:cat %}
+										{% if field|is_matrix %}
+											{% comment %} here are the subquestion in matrix form {% endcomment %}
+											{{ field }}
+										{% else %}
+											<div class="form-group{% if field.errors %} invalid{% endif %}{% if field|is_subsubquestion %} subsubquestion{% endif %}{% if field|is_subquestion %} subquestion{% if field.initial %}{% else %} disabled {% endif %}{% endif %}">
+											{% if field.label|is_water_header %}
+												<h4>{{ field.label|is_water_header }}</h4>
+											{% endif %}
+											{{ field |as_crispy_field}}
+											</div>
+											{% if field|is_matrix_source %}
+												{% if matrix_current %}
+													This text should never be seen
+												{%else%}
+                          {% comment %} here are begins the subquestion matrix container {% endcomment %}
+													{% setvar True as matrix_current %}
+													<div id="id_matrix_{{field.name}}" class="form-group container_matrix {% if field.errors %} invalid{% endif %} {% if field|is_subsubquestion %} subsubquestion {% endif %} {% if field|is_subquestion %} subquestion {% if field.initial %}{% else %}disabled{% endif %} {% endif %}">
+													<span  class="sub_question sub_sub_question matrix_target matrix_row_0 matrix_col_1"></span>
+													{% for header in matrix_labels|get_item:field.name %}
+														<span  class="sub_question sub_sub_question matrix_target label_row_{{ forloop.counter }} matrix_row_{{ forloop.counter }} matrix_col_1">{{header}}</span>
+													{% endfor %}
+
+													{% for header in matrix_headers|get_item:field.name %}
+														<div  class="sub_question sub_sub_question matrix_target matrix_row_0 matrix_col_{{ forloop.counter|add:1 }}">{{header}}</div>
+													{% endfor %}
+												{% endif %}
+											{% else %}
+													{% if matrix_current %}
+														{% setvar False as matrix_current %}
+														</div>
+								      		{% endif %}
+								    	{% endif %}
+										{% endif %}
+									{% endif %}
+								{% endfor %}
+							</div>
+						</div>
+
+					</div>
+					{% endfor %}
+
+					<input id="surveySubmitBtn" type="submit" hidden="">
+
+				</div>
+			</form>
+		</div>
+
+	</div>
+</section>
+
+{% endblock progression_content %}
+
+
+
+{% block next_btn %}
+<button id="next-button" class="btn btn--medium" onclick="javascript:surveySubmitBtn.click();">{% translate "Next" %}</button>
+{% endblock next_btn %}
+
+
+
+
+{% block end_body_scripts %}
+<script src="{% static 'js/survey.js' %}"></script>
+{% endblock end_body_scripts %}

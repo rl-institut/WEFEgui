@@ -1,40 +1,25 @@
 import io
 from pathlib import Path
-
 from django.contrib.auth.decorators import login_required
-import json
-import logging
-import pandas as pd
-import os
-import base64
-import re
 from django.http import JsonResponse
-from jsonview.decorators import json_view
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import *
 from django.urls import reverse
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
-from django.contrib import messages
 from django.db.models import Q, F, Avg, Max
-from epa.settings import MVS_GET_URL, MVS_LP_FILE_URL
 from .forms import *
 from .helpers import *
 from business_model.forms import *
-from projects.requests import fetch_mvs_simulation_results
 from projects.models import *
 from projects.views import project_duplicate, project_delete
 from business_model.models import *
-from cp_nigeria.models import ConsumerGroup
-from cp_nigeria.helpers import ReportHandler
 from projects.forms import UploadFileForm, ProjectShareForm, ProjectRevokeForm, UseCaseForm
-from projects.services import RenewablesNinja
-from projects.constants import DONE, PENDING, ERROR
-from projects.views import request_mvs_simulation, simulation_cancel
-from business_model.helpers import B_MODELS
-from dashboard.models import KPIScalarResults, KPICostsMatrixResults, FancyResults
-from dashboard.helpers import KPI_PARAMETERS
-import requests
+
+from .models import SurveyAnswer
+from .survey import SURVEY_CATEGORIES, SURVEY_QUESTIONS_CATEGORIES, get_survey_question_by_id
+
+import logging
 
 from projects.models.base_models import Timeseries
 
@@ -324,40 +309,123 @@ def wefe_economic_parameters(request, proj_id, step_id=STEP_MAPPING["economic_pa
     }
 
     if request.method == "GET":
-        return render(request, "wefe/steps/demand.html", context)
+        return render(request, "wefe/steps/step_progression.html", context)
 
     if request.method == "POST":
         # TODO
         return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
 
+
+def is_matrix_source(field):
+    field_classes = field.widget.attrs.get("class")
+    answer = False
+    if field_classes is not None:
+        if "matrix_source" in field_classes:
+            answer = True
+    return answer
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def wefe_system_layout(request, proj_id, step_id=STEP_MAPPING["system_layout"]):
     project = get_object_or_404(Project, id=proj_id)
-
-    if (project.user != request.user) and (
-        project.viewers.filter(user__email=request.user.email, share_rights="edit").exists() is False
-    ):
-        raise PermissionDenied
-
-    scenario = project.scenario
-
-    page_information = "About the WEFE system layout"
-    context = {
-        "proj_id": proj_id,
-        "proj_name": project.name,
-        "step_id": step_id,
-        "step_list": WEFE_STEP_VERBOSE,
-        "page_information": page_information,
-    }
-
-    if request.method == "GET":
-        return render(request, "wefe/steps/demand.html", context)
-
+    scen_id = project.scenario.id
     if request.method == "POST":
-        # TODO
-        return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+        form = SurveyQuestionForm(
+            request.POST, qs=SurveyAnswer.objects.filter(scenario_id=scen_id)
+        )
+
+        if form.is_valid():
+            qs = SurveyAnswer.objects.filter(scenario_id=scen_id)
+            with open(f"scenario_{scen_id}_survey_answers.json", "w") as fp:
+                json.dump(form.cleaned_data, fp, indent=4)
+            for criteria_num, value in form.cleaned_data.items():
+                crit = qs.get(question_id=criteria_num.replace("criteria_", ""))
+                crit.value = json.dumps(value)
+                crit.save(update_fields=["value"])
+
+            answer = HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+        else:
+            # TODO
+            print("Form is not valid")
+            # import pdb;
+            # pdb.set_trace()
+
+    else:
+        if scen_id is None:
+            last_scenario_id = SurveyAnswer.objects.all().values_list("scenario_id",
+                                                                      flat=True).distinct().order_by().last()
+            if last_scenario_id is None:
+                last_scenario_id = 0
+            scenario_id = last_scenario_id + 1
+            answer = HttpResponseRedirect(reverse("view_survey", args=[scenario_id]))
+        else:
+            scenario_id = scen_id
+
+            # Check if answers already exists, if not create them
+            qs_answer = SurveyAnswer.objects.filter(scenario_id=scenario_id)
+            # import pdb;pdb.set_trace()
+            if qs_answer.exists() is False:
+                questions = SurveyQuestion.objects.all()
+                print(questions)
+                for question in questions:
+                    # print(question)
+                    answer_param = {}
+                    answer_param["scenario_id"] = scenario_id
+                    answer_param["question"] = question
+                    new_answer = SurveyAnswer(**answer_param)
+                    new_answer.save()
+                qs_answer = SurveyAnswer.objects.filter(scenario_id=scenario_id)
+
+            categories = [cat for cat in SURVEY_QUESTIONS_CATEGORIES.keys()]
+            form = SurveyQuestionForm(qs=qs_answer)
+
+            categories_map = []
+            matrix_headers = {}
+            matrix_labels = {}
+            for field in form.fields:
+                question_id = field.split("criteria_")[1]
+                # TODO: could be done from models "category" attribute
+                cat = SURVEY_CATEGORIES.get(question_id)
+                # TODO: reassign cat after testing phase is over
+                categories_map.append(cat)
+                # TODO here one can know that the question
+                if is_matrix_source(form.fields[field]):
+                    subs = []
+                    labels = []
+                    question = get_survey_question_by_id(SURVEY_STRUCTURE, question_id)
+                    for answer, subquestions in question["subquestion"].items():
+                        labels.append(answer)
+                        for sq_id in subquestions:
+                            q_main_id = ".".join(sq_id.split(".")[:2])
+                            subquestion = get_survey_question_by_id(SURVEY_STRUCTURE, sq_id)
+                            # print(subquestion)
+                            if subquestion.get("display_type", "") == "matrix":
+                                if subquestion["question"] not in subs:
+                                    subs.append(subquestion["question"])
+                    matrix_headers[field] = subs
+                    matrix_labels[field] = labels
+            page_information = "This survey will allow the user to build and simulate an energy system"
+
+            answer = render(
+                request,
+                "wefe/steps/survey_layout.html",
+                {
+                    "form": form,
+                    "scen_id": scenario_id,
+                    "categories_map": categories_map,
+                    "categories": categories,
+                    "categories_verbose": SURVEY_QUESTIONS_CATEGORIES,
+                    "matrix_headers": matrix_headers,
+                    "matrix_labels": matrix_labels,
+                    "proj_id": proj_id,
+                    "proj_name": project.name,
+                    "step_id": step_id,
+                    "step_list": WEFE_STEP_VERBOSE,
+                    "page_information": page_information,
+                },
+            )
+
+    return answer
 
 
 @login_required
@@ -382,7 +450,7 @@ def wefe_optimization_weighting(request, proj_id, step_id=STEP_MAPPING["optimiza
     }
 
     if request.method == "GET":
-        return render(request, "wefe/steps/demand.html", context)
+        return render(request, "wefe/steps/step_progression.html", context)
 
     if request.method == "POST":
         # TODO
@@ -411,7 +479,7 @@ def wefe_simulation(request, proj_id, step_id=STEP_MAPPING["simulation"]):
     }
 
     if request.method == "GET":
-        return render(request, "wefe/steps/demand.html", context)
+        return render(request, "wefe/steps/step_progression.html", context)
 
     if request.method == "POST":
         # TODO
@@ -440,7 +508,7 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
     }
 
     if request.method == "GET":
-        return render(request, "wefe/steps/demand.html", context)
+        return render(request, "wefe/steps/step_progression.html", context)
 
     if request.method == "POST":
         # TODO
