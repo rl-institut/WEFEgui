@@ -17,5 +17,4 @@ python-docx
 requests
 XlsxWriter
 whitenoise
-django-sass-processor
-environ
+django-environ
