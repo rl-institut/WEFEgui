@@ -1,4 +1,4 @@
-FROM python:3.11.10
+FROM python:3.11.13
 
 RUN echo POSTGRES
 ENV APP_ROOT /src
