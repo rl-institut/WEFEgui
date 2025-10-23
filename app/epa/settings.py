@@ -37,7 +37,10 @@ DEBUG = env.bool("DEBUG", default=False)
 STATICFILES_DIRS = (str(BASE_DIR / "static"),)
 STATIC_URL = "/static/"
 STATIC_ROOT = str(BASE_DIR / "cdn_static_root")
-STATICFILES_FINDERS = ["django.contrib.staticfiles.finders.FileSystemFinder"]
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+]
 
 if DEBUG is True:
     STATICFILES_FINDERS.append("sass_processor.finders.CssFinder")
