@@ -1,0 +1,76 @@
+{% extends 'wefe/steps/step_progression.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block start_body_scripts %}
+<script src="{% static 'node_modules/chartjs-sankey/chart.js' %}"></script>
+<script src="{% static 'node_modules/chartjs-sankey/chartjs-sankey.js' %}"></script>
+{% endblock %}
+
+{% block progression_content %}
+<table id="table-results" style="display:none">
+  <thead>
+    <th>KPI</th>
+    <th>Value</th>
+    <th>Unit</th>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+<div>
+  <canvas id="chart"></canvas>
+</div>
+<button class="btn btn--medium" style="width:fit-content; align-self:center" onclick="getDebugData()">Load debug</button>
+{% endblock %}
+
+{% block end_body_scripts %}
+<script>
+  var chart = null;
+  function getDebugData() {
+    fetch('{% url "get_wefesim_results" %}').then(resp => resp.json()).then(data => {
+      if (!data)
+        return;
+
+      if (data.kpi) {
+        // fill results table
+        let table = document.getElementById('table-results');
+        for (let kpi of data.kpi) {
+          let row = table.tBodies[0].insertRow();
+          row.insertCell().innerText = kpi.key;
+          row.insertCell().innerText = kpi.value? kpi.value.toFixed(2) : kpi.value;
+          row.insertCell().innerText = kpi.unit;
+        }
+        // show table
+        table.style.display = 'block';
+      }
+
+      if (data.energy_flows) {
+        // generate sankey diagram
+        const colors = {
+          'electricity': 'gold',
+          'biogas': 'cyan',
+          'energy': 'orange',
+          'default': 'gray',
+        };
+        var ctx = document.getElementById("chart").getContext("2d");
+        if (chart)
+          chart.destroy();
+        chart = new Chart(ctx, {
+          type: "sankey",
+          data: {
+            datasets: [
+              {
+                data: data.energy_flows,
+                colorFrom: c => colors[c.raw.type || 'default'],
+                colorTo: c => colors[c.raw.type || 'default'],
+              }
+            ]
+          }
+        });
+      }
+    }).catch(error => {
+      console.error(error);
+    });
+  }
+</script>
+{% endblock end_body_scripts%}

@@ -35,6 +35,7 @@ from wefe.scenario_builder import WEFEConfigurator
 from wefe.survey import SURVEY_CATEGORIES, SURVEY_QUESTIONS_CATEGORIES, get_survey_question_by_id
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -676,7 +677,7 @@ def wefe_simulation(request, proj_id, step_id=STEP_MAPPING["simulation"]):
 
 
 @login_required
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET"])
 def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
     project = get_object_or_404(Project, id=proj_id)
 
@@ -687,21 +688,89 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
 
     scenario = project.scenario
 
-    page_information = "Results page with report option"
     context = {
         "proj_id": proj_id,
         "proj_name": project.name,
         "step_id": step_id,
         "step_list": WEFE_STEP_VERBOSE,
-        "page_information": page_information,
     }
 
     if request.method == "GET":
-        return render(request, "wefe/steps/step_progression.html", context)
+        return render(request, "wefe/steps/result.html", context)
 
-    if request.method == "POST":
-        # TODO
-        return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+
+@require_http_methods(["GET"])
+def get_wefesim_results(request):
+    # read example sim results from static file
+    # get units from file
+    units_file = settings.STATIC_ROOT / "units.json"
+    units = dict()
+    if units_file.exists():
+        with units_file.open() as f:
+            units = json.load(f)
+    # get results from file
+    results_file = settings.STATIC_ROOT / "debug_results.json"
+    kpi = None
+    energy_flows = None
+    if results_file.exists():
+        # get general information
+        with results_file.open() as f:
+            results = json.load(f)
+
+        def aggregate(key):
+            try:
+                return sum([v for v in results[key].values() if v is not None])
+            except KeyError:
+                return None
+
+        kpi_lut = {
+            # name in table -> name in results
+            "total_annual_cost_moo": "annual_cost_moo",
+            "total_variable_cost_moo": "variable_cost_moo",
+            "total_upfront_investments": "upfront_investment_costs",
+            "land_requirement_additional": "land_requirement_additional",
+            "land_requirement_total": "land_requirement_total",
+            "total_water_consumption": "water_consumption",
+            "total_indirect_water_consumption": "indirect_water_consumption",
+            "water_scarcity_footprint": "???",
+            "ghg_emissions_total": "ghg_emissions",
+            "system_opex_total": "opex_fix_costs_total",
+        }
+        kpi = [
+            {
+                "key": kpi_name,
+                "value": aggregate(result_name),
+                "unit": units.get(kpi_name),
+            }
+            for kpi_name, result_name in kpi_lut.items()
+        ]
+
+        # get energy flows
+        energy_flows = list()
+        for k, flow in results["aggregated_flow"].items():
+            # parse flow name
+            # make flow name json parseable
+            # flow name format: ('busname', 'direction', 'component', 'bustype', 'componenttype')
+            k2 = "[" + k.replace("'", '"')[1:-1] + "]"
+            bus_name, direction, component_name, carrier, component_type = json.loads(k2)
+            if direction == "in":
+                # from bus to component
+                flow_from = bus_name
+                flow_to = component_name
+            else:
+                # from component to bus
+                flow_from = component_name
+                flow_to = bus_name
+            energy_flows.append(
+                {
+                    "from": flow_from,
+                    "to": flow_to,
+                    "flow": flow,
+                    "type": carrier,
+                }
+            )
+
+    return JsonResponse({"kpi": kpi, "energy_flows": energy_flows})
 
 
 WEFE_STEPS = {
