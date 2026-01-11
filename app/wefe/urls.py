@@ -30,6 +30,7 @@ urlpatterns = [
     path("ajax/wefesim-simulation", request_wefesim_simulation, name="request_wefesim_simulation"),
     path("ajax/wefesim-simulation/<int:proj_id>", request_wefesim_simulation, name="request_wefesim_simulation"),
     path("ajax/get-wefesim-data/<int:proj_id>", get_wefesim_data, name="get_wefesim_data"),
+    path("ajax/get-dummy-results/", get_wefesim_results, name="get_wefesim_results"),
     # energy-system survey
     path("<int:proj_id>/survey", wefe_system_layout, name="view_survey_questions"),
     path("<int:proj_id>/submit/survey", wefe_system_layout, name="submit_survey"),
