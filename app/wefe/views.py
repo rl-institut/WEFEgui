@@ -51,9 +51,9 @@ STEP_MAPPING = {
     "results": 7,
 }
 
-WEFE_STEP_VERBOSE = {
+WEFE_STEP_VERBOSE_MAPPING = {
     "choose_location": _("Choose location"),
-    "resources": _("Resources_mapping"),
+    "resources": _("Resources mapping"),
     "demand": _("Demand assessment"),
     "system_layout": _("System layout"),
     "optimization_weighting": _("Multi-objective optimization"),
@@ -62,7 +62,7 @@ WEFE_STEP_VERBOSE = {
 }
 
 # sorts the step names based on the order defined in STEP_MAPPING (for ribbon)
-WEFE_STEP_VERBOSE = [WEFE_STEP_VERBOSE[k] for k, v in sorted(STEP_MAPPING.items(), key=lambda x: x[1])]
+WEFE_STEP_VERBOSE = [WEFE_STEP_VERBOSE_MAPPING[k] for k, v in sorted(STEP_MAPPING.items(), key=lambda x: x[1])]
 
 
 @require_http_methods(["GET"])
@@ -820,3 +820,26 @@ def fetch_wefe_simulation_results(request, sim_id):
         status=200,
         content_type="application/json",
     )
+
+
+@require_http_methods(["GET"])
+def help_page(request):
+    # have a help page for each of the steps and add a "General" help page
+    help_steps = list(WEFE_STEP_VERBOSE_MAPPING.items())
+    numbered_steps = []
+    for ix, step in enumerate(help_steps):
+        numbered_verbose = f"{ix + 1}. {step[1]}"
+        numbered_steps.append((step[0], numbered_verbose))
+    numbered_steps.insert(0, ("general", "General"))
+
+    return render(request, "wefe/help_pages/help_page.html", context={"steps": numbered_steps})
+
+
+@json_view
+@require_http_methods(["GET", "POST"])
+def ajax_help_page(request):
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        selected_step = request.GET.get("selected_step", "general")
+
+        return render(request, f"wefe/help_pages/{selected_step}.html")
+    return None

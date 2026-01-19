@@ -39,4 +39,6 @@ urlpatterns = [
         fetch_wefe_simulation_results,
         name="fetch_wefe_simulation_results",
     ),
+    path("documentation", help_page, name="help_page"),
+    path("ajax/documentation/selected_step", ajax_help_page, name="ajax_help_page"),
 ]
