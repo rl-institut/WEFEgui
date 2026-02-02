@@ -52,11 +52,11 @@ STEP_MAPPING = {
 }
 
 WEFE_STEP_VERBOSE = {
-    "choose_location": _("Choose location"),
-    "resources": _("Resources_mapping"),
-    "demand": _("Demand assessment"),
-    "system_layout": _("System layout"),
-    "optimization_weighting": _("Multi-objective optimization"),
+    "choose_location": _("Choose Location"),
+    "resources": _("Resources Mapping"),
+    "demand": _("Demand Assessment"),
+    "system_layout": _("System Configuration"),
+    "optimization_weighting": _("Multi-objective Optimization"),
     "simulation": _("Simulation"),
     "results": _("Results"),
 }
