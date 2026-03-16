@@ -8,12 +8,12 @@ Learn more about the OPTIMG project on its [project page](https://reiner-lemoine
 This code is directly forked from previous open-source work [open-plan-tool](https://github.com/open-plan-tool/gui).
 ## Basic structure
 
-This repository contains the code for the user interface. The simulations are performed by [django-oemof]https://github.com/rl-institut/django-oemof) on a dedicated server. Once a simulation is over the results are sent back to the user interface were one can analyse them.
+This repository contains the code for the user interface. The simulations are performed by [django-oemof](https://github.com/rl-institut/django-oemof) on a dedicated server. Once a simulation is over the results are sent back to the user interface where one can analyse them.
 
 
 # Getting Started
 
-## Deploy locally using the open plan MVS server
+## Deploy locally
 
 Prior to be able to develop locally, you might need to install postgres and create a local database, simply google `install postgres` followed by your os name (`linux/mac/windows`)
 
@@ -21,8 +21,9 @@ Prior to be able to develop locally, you might need to install postgres and crea
 2. Activate your virtual environment
 3. Move to the `app` folder with `cd app`
 4. Install the dependencies with `pip install -r requirements/postgres.txt`
+If you encounter errors involving cchardet, please visit https://github.com/rl-institut/WEFEgui/issues/49
 5. Install extra local development dependencies with `pip install -r dev_requirements.txt`
-6. Create environment variables or a new file in the app directory called `.env` for communication with the database (only replace content surrounded by `<>`)
+6. Create a new text file in the app directory called `.env` and fill with the following environment variables for communication with the database and external servers (only replace content surrounded by `<>`, contact the developpers for content marked as `(INTERNAL)`)
 ```
 SQL_ENGINE=django.db.backends.postgresql
 SQL_DATABASE=<your db name>
@@ -31,13 +32,22 @@ SQL_PASSWORD=<your password>
 SQL_HOST=localhost
 SQL_PORT=5432
 DEBUG=(True|False)
+USE_PROXY=(True|False)
+WEFEDEMAND_API=(INTERNAL)
+WEFESIM_API=(INTERNAL)
+WEATHER_DATA_API_HOST=(INTERNAL)
+EXCHANGE_RATES_API_TOKEN=(INTERNAL)
+KOBO_API_TOKEN=(INTERNAL)
 ```
-7. Add an environment variable `MVS_API_HOST` and set the url of the simulation server you wish to use for your models (to use the MVS server, it should be https://mvs-open-plan.rl-institut.de)
-8. To automatically download PV potential based on coordinates, add an environment variable `RN_API_TOKEN` containing your API token from https://www.renewables.ninja/
-9. To automatically fetch currency exchange rates, add an environment variable `EXCHANGE_RATES_API_TOKEN` containing your API token from https://www.exchangerate-api.com/
-8. Execute the `local_setup.sh` file (`. local_setup.sh` on linux/mac `bash local_setup.sh` on windows). Answer yes if prompted
-9. Start the local server with `python manage.py runserver`
-10. You can then login with `testUser` and `ASas12,.` or create your own account
+7. Execute the following commands. Answer yes if prompted. Install missing packages using `pip` if necessary, for example `pip install psycopg2-binary`
+```
+python manage.py collectstatic
+python manage.py migrate
+python manage.py update_survey_questions --update
+```
+You may have to execute them again after making changes to the code.
+8. Start the local server with `python manage.py runserver`
+9. You can then login with `testUser` and `ASas12,.` or create your own account
 
 ## Deploy using Docker Compose
 The following commands should get everything up and running, using the web based version of the MVS API.
