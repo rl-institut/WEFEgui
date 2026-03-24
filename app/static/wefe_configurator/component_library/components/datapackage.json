@@ -652,11 +652,6 @@
                         "name": "marginal_cost",
                         "type": "number",
                         "format": "default"
-                    },
-                    {
-                        "name": "resource_cost",
-                        "type": "number",
-                        "format": "default"
                     }
                 ],
                 "missingValues": [
