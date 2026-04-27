@@ -3,18 +3,23 @@
 {% load i18n %}
 {% load plotly_dash %}
 
-{% block title %} Dash Example  {% endblock title %}
+{% block start_body_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+{% endblock start_body_scripts %}
+
+{% block title %} Results  {% endblock title %}
 
 {% block progression_content %}
-
-    <h2>Django + Dash Example</h2>
-
-    <!-- Hidden container with JSON payload -->
-    <div id="wefe-sim-data" style="display:none;">
-        {{ simulation.results|safe }}
+<section class="container">
+    <div id="results-container">
+        {% plotly_app name=dash_app ratio=1 %}
     </div>
-
-    {% plotly_app name=dash_app ratio=0.5 %}
+    <div style="display:flex;justify-content:center">
+    <button id="exportPdfBtn" class="btn btn--medium" style="margin-top:0.5rem">
+        Download Results as PDF
+    </button>
+    </div>
+</section>
 
 {% endblock progression_content %}
 
@@ -25,4 +30,133 @@
 {% endblock next_btn %}
 
 {% block end_body_scripts %}
+<script>
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function waitForDashIframe(iframe, timeout = 20000) {
+  const start = Date.now();
+
+  while (Date.now() - start < timeout) {
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+    if (doc) {
+      const loading = doc.querySelector("._dash-loading");
+      const graphs = doc.querySelectorAll(".js-plotly-plot");
+
+      if (!loading && graphs.length > 0) {
+        await wait(1000);
+        return doc.body;
+      }
+    }
+
+    await wait(300);
+  }
+
+  throw new Error("Dash app did not finish loading before export.");
+}
+
+async function prepareDashForExport(iframe) {
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+  // Force Plotly to finish sizing
+  const plots = doc.querySelectorAll(".js-plotly-plot");
+  plots.forEach(plot => {
+    if (iframe.contentWindow.Plotly) {
+      iframe.contentWindow.Plotly.Plots.resize(plot);
+    }
+  });
+
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  // Clone so we don't mutate the real Dash app
+  const clone = doc.body.cloneNode(true);
+
+  // Hide Plotly toolbars and tighten layout
+  const style = doc.createElement("style");
+  style.textContent = `
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: white !important;
+    }
+
+    .modebar,
+    .modebar-container,
+    .dash-debug-menu,
+    .dash-debug-menu__outer {
+      display: none !important;
+    }
+
+    .js-plotly-plot,
+    .plot-container,
+    .svg-container,
+    .main-svg {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    table {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    h1, h2, h3, h4 {
+      page-break-after: avoid !important;
+      break-after: avoid !important;
+    }
+  `;
+
+  clone.prepend(style);
+  return clone;
+}
+
+
+document.getElementById("exportPdfBtn").addEventListener("click", async function () {
+  const button = this;
+  const iframe = document.querySelector("#results-container iframe");
+
+  button.disabled = true;
+  button.textContent = "Preparing PDF...";
+
+  try {
+    await waitForDashIframe(iframe);
+
+    const exportBody = await prepareDashForExport(iframe);
+
+    await html2pdf()
+      .set({
+        margin: [0.25, 0.25, 0.25, 0.25],
+        filename: "results-export.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          windowWidth: iframe.contentDocument.body.scrollWidth,
+          windowHeight: iframe.contentDocument.body.scrollHeight,
+          scrollX: 0,
+          scrollY: 0
+        },
+        jsPDF: {
+          unit: "in",
+          format: "letter",
+          orientation: "portrait"
+        },
+        pagebreak: {
+          mode: ["css", "legacy"],
+          avoid: [".js-plotly-plot", ".plot-container", "table"]
+        }
+      })
+      .from(exportBody)
+      .save();
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Download Results as PDF";
+  }
+});
+
+</script>
 {% endblock end_body_scripts %}
