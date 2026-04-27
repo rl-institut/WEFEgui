@@ -54,7 +54,7 @@
 		</div>
 		<div>
 			<br>
-		<button id="delete" class="btn btn--medium" onclick="javascript:deleteSurvey({{ proj_id }})" style="margin-top:0.5rem">
+		<button id="delete" class="btn btn--medium" onclick="return confirm('Are you sure? This will delete all submitted responses to the survey.') && deleteSurvey({{ proj_id }})" style="margin-top:0.5rem">
 			Delete survey
 		</button>
 		<span class="spinner" id="loading_spinner-delete" style="display:none; margin-top: 0.5rem">
