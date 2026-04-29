@@ -116,8 +116,42 @@ class KoboHandler:
         # self.assign_permissions("view_asset", "AnonymousUser")
         # self.project_survey_url = self.deploy_form()
 
-    def request_data(self, survey_id):
-        pass
+    def request_data(self, survey_id=None):
+        if survey_id is None:
+            survey_id = self.project_survey_id
+
+        response = requests.get(f"{KOBO_API_URL}/assets/{survey_id}/data", headers=self.request_headers, timeout=60)
+
+        return response.json()
+
+    def get_data_summary(self, survey_id=None):
+        if survey_id is None:
+            survey_id = self.project_survey_id
+
+        kobo_json = self.request_data(survey_id)
+
+        fields = [
+            "respondent_local_aut",
+            "respondent_service",
+            "respondent_large_scale_farm",
+            "respondent_business",
+        ]
+
+        counts = {field: 0 for field in fields} | {"respondent_unknown": 0}
+        nr_responses = kobo_json.get("count")
+        if nr_responses == 0:
+            return counts
+        else:
+            for record in kobo_json.get("results", []):
+                for field in fields:
+                    key = f"G_0/{field}"
+                    try:
+                        if record.get(key) == "yes":
+                            counts[field] += 1
+                    except KeyError:
+                        counts["respondent_unknown"] += 1
+
+        return counts
 
     def get_survey_metadata(self, survey_id=None):
         # TODO might be useful depending on how we need the surveys and what we save about them

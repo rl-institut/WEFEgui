@@ -24,11 +24,6 @@
 		<h1>Demand collection survey</h1>
 		<p>To simulate demand timeseries using RAMP, first demand data should be collected. To create a shareable link
 			to a survey, please use the button below. </p>
-		<ul>
-			<li>What else should be possible here?</li>
-			<li>We could allow to host the survey on own server and input kobo API key from user</li>
-			<li>We could also allow to upload demand data directly, then we have give instructions into needed format</li>
-		</ul>
 		{% if not survey_id %}
 		<div>
 			<button id="survey_button" class="btn btn--medium" onclick="javascript:generateSurveyLink({{ proj_id }})" style="margin-top:0.5rem">
@@ -45,11 +40,22 @@
 		</div>
 		{% else %}
 		<div id="link_display">
-			Use the following link to fill out the questionnaire <a href="{{survey_url}}">{{ survey_url }} </a>
+			Use the following link to fill out the survey <a href="{{survey_url}}">{{ survey_url }} </a>
+		</div>
+		<br>
+		<div>
+			<h3>Current survey respondents:</h3>
+			<div style="display:flex;justify-content:space-between;max-width:50%">
+				<span>Local authority: {{ kobo_counts.respondent_local_aut }}</span>
+				<span>Service: {{ kobo_counts.respondent_service }}</span>
+				<span>Large scale farm: {{ kobo_counts.respondent_large_scale_farm }}</span>
+				<span>Business: {{ kobo_counts.respondent_business }}</span>
+			</div>
 		</div>
 		<div>
-		<button id="delete" class="btn btn--medium" onclick="javascript:deleteSurvey({{ proj_id }})" style="margin-top:0.5rem">
-			Delete survey (warning!!)
+			<br>
+		<button id="delete" class="btn btn--medium" onclick="return confirm('Are you sure? This will delete all submitted responses to the survey.') && deleteSurvey({{ proj_id }})" style="margin-top:0.5rem">
+			Delete survey
 		</button>
 		<span class="spinner" id="loading_spinner-delete" style="display:none; margin-top: 0.5rem">
 			<svg viewBox="25 25 50 50">
@@ -57,15 +63,13 @@
 			</svg>
 		</span>
 		</div>
-
-
 		{% endif %}
 	</section>
 </div>
-
 <div>
 	<section class="container-lg">
-		<h1>Test WEFE-Demand API</h1>
+		<hr>
+		<h1>Generate demand from survey answers</h1>
 		<button id="ramp-sim" class="btn btn--medium" onclick="javascript:wefeDemandRequest({{ proj_id }},default_survey=false)" style="margin-top:0.5rem">
 			Ramp simulation
 		</button>

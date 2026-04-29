@@ -245,19 +245,11 @@ def wefe_demand(request, proj_id, step_id=STEP_MAPPING["demand"]):
         }
 
         if project.kobo_survey_id is not None:
-            context.update({"survey_id": project.kobo_survey_id, "survey_url": project.kobo_survey_url})
-
-        # if os.path.exists(output_path):
-        #     output_data = pd.read_csv(f"wefe/demand_data/{SURVEY_KEY}/.csv", index_col="datetime", decimal=",")
-        #     water_demand = output_data.loc[:, output_data.columns.str.contains("water")]
-        #     electricity_demand = output_data.loc[:, ~output_data.columns.str.contains("water")]
-        #     context.update(
-        #         {
-        #             "timestamps": scenario.get_timestamps(json_format=True),
-        #             "water_demand": water_demand.to_dict(orient="list"),
-        #             "electricity_demand": electricity_demand.to_dict(orient="list"),
-        #         }
-        #     )
+            kobo = KoboHandler(project)
+            counts = kobo.get_data_summary(kobo.project_survey_id)
+            context.update(
+                {"survey_id": project.kobo_survey_id, "survey_url": project.kobo_survey_url, "kobo_counts": counts}
+            )
 
         return render(request, "wefe/steps/demand.html", context)
 
