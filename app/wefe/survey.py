@@ -203,6 +203,7 @@ COMPONENT_SURVEY_STRUCTURE = [
             "biogas plant",
             "other",
         ],
+        INFOBOX: "Please select at least one electricity source. 'Other' cannot be selected alone.",
         "answer_map_to": TYPE_COMPONENT,
         "display_type": "multiple_choice_tickbox",
         "subquestion": {
@@ -312,7 +313,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
         text_to_replace="TYPE_WATER_SUPPLY",
         survey_questions_template=[
             {
-                "question": "Which water source do you use for TYPE_WATER_SUPPLY",
+                "question": "Which water source do you use for TYPE_WATER_SUPPLY?",
                 "question_id": "3",
                 "possible_answers": [
                     "groundwater well",
@@ -325,6 +326,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                     "bottled water",
                     "other",
                 ],
+                INFOBOX: "Please select at least one water source. 'Other' cannot be selected alone.",
                 "answer_map_to": TYPE_COMPONENT,
                 "display_type": "multiple_choice_tickbox",
                 "subquestion": {
@@ -395,6 +397,15 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                         "sediments and turbidity",
                         "nitrates and nitrites",
                     ],
+                    INFOBOX: "Natural water sources typically contain impurities that require treatment."
+                    " Please select at least one water quality issue present at your site to configure"
+                    " an appropriate treatment."
+                    " Note: (1) Fecal Contamination additionally requires any one of Salinity, Heavy Metals, or"
+                    " Chemical Contamination to be selected."
+                    " (2) Hardness additionally requires Salinity to be selected."
+                    " (3) Sediments & Turbidity additionally requires any one of Salinity, Heavy Metals, or"
+                    " Chemical Contamination to be selected."
+                    " (4) Nitrates & Nitrites additionally requires Chemical Contamination (Fertilizers) to be selected.",
                     "display_type": "multiple_choice_tickbox",
                     "subquestion": {
                         "salinity": "4.1",
@@ -408,6 +419,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                     "variable_name": "salinity",
                     "possible_answers": TYPE_FLOAT,
                     "answer_map_to": TYPE_COMPONENT_ATTRIBUTE,
+                    INFOBOX: "Please enter a Salinity value greater than 0.",
                 },
                 {
                     "question": "Which heavy metals are prevalent in your TYPE_WATER_SOURCE?",
@@ -420,6 +432,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                         "Cadmium",
                         "Iron",
                     ],
+                    INFOBOX: "Please select at least one heavy metal.",
                     "display_type": "multiple_choice_tickbox",
                     "answer_map_to": TYPE_COMPONENT,
                 },
@@ -432,6 +445,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                         "pharmaceutical_residues",
                         "fertilizers",
                     ],
+                    INFOBOX: "Please select at least one chemical contaminant.",
                     "answer_map_to": TYPE_COMPONENT,
                     "display_type": "multiple_choice_tickbox",
                 },
@@ -461,6 +475,8 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                             "chlorination",
                             "other",
                         ],
+                        INFOBOX: "Please select either 'no' or at least one treatment technology."
+                        " 'Other' cannot be selected alone.",
                         "answer_map_to": TYPE_COMPONENT,
                         "display_type": "multiple_choice_tickbox",
                         "subquestion": {
@@ -539,6 +555,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                     "disposal to environment without treatment",
                     "other",
                 ],
+                INFOBOX: "Please select at least one treatment technology. 'Other' cannot be selected alone.",
                 "answer_map_to": TYPE_COMPONENT,
                 "display_type": "multiple_choice_tickbox",
                 "subquestion": {
@@ -576,6 +593,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                     "composting toilet",
                     "open field",
                 ],
+                INFOBOX: "Please select at least one toilet type.",
                 "answer_map_to": TYPE_COMPONENT,
             },
         ],
