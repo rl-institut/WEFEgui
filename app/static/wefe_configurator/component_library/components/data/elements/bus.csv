@@ -1,38 +1,38 @@
-name;type;balanced;carrier
-seawater-bus;bus;True;water
-ac-elec-bus;bus;True;electricity
-dc-elec-bus;bus;True;electricity
-brine-bus;bus;True;water
-solar-energy-bus;bus;True;energy
-banana-bus;bus;True;biomass
-wind-bus;bus;True;energy
-drinking-water-bus;bus;True;water
-service-water-bus;bus;True;water
-precipitation-bus;bus;True;water
-irrigation-bus;bus;True;water
-diesel-bus;bus;True;energy
-groundwater-bus;bus;True;water
-riverflow-bus;bus;True;water
-biofuel-bus;bus;True;fuel
-tap-water-bus;bus;True;water
-human-feces-bus;bus;True;feces
-human-urine-bus;bus;True;urine
-animal-feces-bus;bus;True;feces
-animal-urine-bus;bus;True;urine
-black-water-bus;bus;True;water
-grey-water-bus;bus;True;water
-wwtp-ip-water-bus;bus;True;water
-wwtp-op-water-bus;bus;True;water
-biomass-bus;bus;True;biomass
-dry-feces-bus;bus;True;dry-feces
-compost-bus;bus;True;compost
-water-in-bus;bus;True;water
-water-out-bus;bus;True;water
-biogas-bus;bus;True;biogas
-N2-bus;bus;True;N2
-untreated-water-bus;bus;True;water
-river-water-bus;bus;True;water
-lake-water-bus;bus;True;water
-truck-water-bus;bus;True;water
-bottled-water-bus;bus;True;water
-rain-water-bus;bus;True;water
+name;type;balanced;carrier;verbose_name;plot
+seawater-bus;bus;True;water;"Seawater";true
+ac-elec-bus;bus;True;electricity;"AC Electricity";true
+dc-elec-bus;bus;True;electricity;"DC Electricity";true
+brine-bus;bus;True;water;"Brine";false
+solar-energy-bus;bus;True;energy;"Solar Irradiation";false
+banana-bus;bus;True;biomass;"Banana";false
+wind-bus;bus;True;energy;"Wind";false
+drinking-water-bus;bus;True;water;"Drinking Water";false
+service-water-bus;bus;True;water;"Service Water";true
+precipitation-bus;bus;True;water;"Precipitation";false
+irrigation-bus;bus;True;water;"Irrigation";false
+diesel-bus;bus;True;energy;"Diesel";true
+groundwater-bus;bus;True;water;"Groundwater";true
+riverflow-bus;bus;True;water;"Riverflow";true
+biofuel-bus;bus;True;fuel;"Biofuel";true
+tap-water-bus;bus;True;water;"Tap Water";true
+human-feces-bus;bus;True;feces;"Human Feces";false
+human-urine-bus;bus;True;urine;"Human Urine";false
+animal-feces-bus;bus;True;feces;"Animal Feces";false
+animal-urine-bus;bus;True;urine;"Animal Urine";false
+black-water-bus;bus;True;water;"Black Water";true
+grey-water-bus;bus;True;water;"Grey Water";true
+wwtp-ip-water-bus;bus;True;water;;false
+wwtp-op-water-bus;bus;True;water;;false
+biomass-bus;bus;True;biomass;"Biomass";true
+dry-feces-bus;bus;True;dry-feces;;false
+compost-bus;bus;True;compost;;false
+water-in-bus;bus;True;water;;false
+water-out-bus;bus;True;water;;false
+biogas-bus;bus;True;biogas;"Biogas";true
+N2-bus;bus;True;N2;;false
+untreated-water-bus;bus;True;water;"Untreated Water";true
+river-water-bus;bus;True;water;"River Water";true
+lake-water-bus;bus;True;water;"Lake Water";true
+truck-water-bus;bus;True;water;"Truck Water";true
+bottled-water-bus;bus;True;water;"Bottled Water";true
+rain-water-bus;bus;True;water;"Rain Water";true

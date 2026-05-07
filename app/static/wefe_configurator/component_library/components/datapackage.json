@@ -31,6 +31,16 @@
                         "name": "carrier",
                         "type": "string",
                         "format": "default"
+                    },
+                    {
+                        "name": "verbose_name",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "plot",
+                        "type": "boolean",
+                        "format": "default"
                     }
                 ],
                 "missingValues": [
