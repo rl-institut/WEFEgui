@@ -682,6 +682,11 @@
                         "name": "indirect_water_consumption_factor",
                         "type": "number",
                         "format": "default"
+                    },
+                    {
+                        "name": "verbose_name",
+                        "type": "string",
+                        "format": "default"
                     }
                 ],
                 "missingValues": [
@@ -1062,6 +1067,11 @@
                     },
                     {
                         "name": "bus",
+                        "type": "string",
+                        "format": "default"
+                    },
+                    {
+                        "name": "verbose_name",
                         "type": "string",
                         "format": "default"
                     }
