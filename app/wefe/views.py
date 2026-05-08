@@ -719,9 +719,17 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
 
     wefe_conf.process_survey(survey_answers)
     wefe_conf.process_demand()
+    wefe_conf.water_systems_postprocessing(survey_answers)
+    wefe_conf.waste_water_systems_postprocessing(survey_answers)
     wefe_conf.add_components()
     wefe_conf.add_buses()
     wefe_conf.add_sequences()
+
+    run_water_simplification = True  # default
+
+    # Apply simplification only when the flag is enabled.
+    if run_water_simplification:
+        wefe_conf.water_systems_simplification()
 
     prepare_app(
         app=app,
