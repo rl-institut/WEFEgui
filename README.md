@@ -46,8 +46,19 @@ python manage.py migrate
 python manage.py update_survey_questions --update
 ```
 You may have to execute them again after making changes to the code.
-8. Start the local server with `python manage.py runserver`
-9. You can then login with `testUser` and `ASas12,.` or create your own account
+8. Next, create a "superuser", which you will use to log in when deploying WEFEgui on your local machine:
+```
+python manage.py createsuperuser
+```
+You will be prompted to enter Username, e-mail, and password for your superuser account. 
+Make sure that you note down the credentials as you require them to log in when deploying WEFEGui locally.
+9. Start the local development server:
+```
+python manage.py runserver
+```
+10. Open the local interface in your browser by clicking on the http adress link showing up
+11. Log in with your set superuser credentials
+12. Run and test WEFEPlan locally :)
 
 ## Deploy using Docker Compose
 The following commands should get everything up and running, using the web based version of the MVS API.
