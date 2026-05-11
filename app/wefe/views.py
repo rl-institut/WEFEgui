@@ -703,6 +703,7 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
     tables = dash_tables["result_tables"]
     services = dash_tables["service_tables"]
     units = dash_tables["parameters_units"]
+    verbose_names = dash_tables["verbose_names"]
     dash_app_name = f"results_dash_{proj_id}"
     app = DjangoDash(dash_app_name)
 
@@ -738,6 +739,7 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
         tables=tables,
         services=services,
         units=units,
+        label_map=verbose_names,
     )
 
     wefe_conf.cleanup()
