@@ -3,9 +3,7 @@
 {% load i18n %}
 {% load plotly_dash %}
 
-{% block start_body_scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-{% endblock start_body_scripts %}
+{% block start_body_scripts %}{% endblock start_body_scripts %}
 
 {% block title %} Results  {% endblock title %}
 
@@ -31,132 +29,95 @@
 
 {% block end_body_scripts %}
 <script>
+const exportPdfUrl = "{% url 'wefe_export_pdf' proj_id %}";
+const csrfToken = "{{ csrf_token }}";
+
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function waitForDashIframe(iframe, timeout = 20000) {
   const start = Date.now();
-
   while (Date.now() - start < timeout) {
     const doc = iframe.contentDocument || iframe.contentWindow.document;
-
     if (doc) {
       const loading = doc.querySelector("._dash-loading");
       const graphs = doc.querySelectorAll(".js-plotly-plot");
-
       if (!loading && graphs.length > 0) {
-        await wait(1000);
-        return doc.body;
+        await wait(2000);
+        return;
       }
     }
-
     await wait(300);
   }
-
   throw new Error("Dash app did not finish loading before export.");
 }
-
-async function prepareDashForExport(iframe) {
-  const doc = iframe.contentDocument || iframe.contentWindow.document;
-
-  // Force Plotly to finish sizing
-  const plots = doc.querySelectorAll(".js-plotly-plot");
-  plots.forEach(plot => {
-    if (iframe.contentWindow.Plotly) {
-      iframe.contentWindow.Plotly.Plots.resize(plot);
-    }
-  });
-
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  // Clone so we don't mutate the real Dash app
-  const clone = doc.body.cloneNode(true);
-
-  // Hide Plotly toolbars and tighten layout
-  const style = doc.createElement("style");
-  style.textContent = `
-    body {
-      margin: 0 !important;
-      padding: 0 !important;
-      background: white !important;
-    }
-
-    .modebar,
-    .modebar-container,
-    .dash-debug-menu,
-    .dash-debug-menu__outer {
-      display: none !important;
-    }
-
-    .js-plotly-plot,
-    .plot-container,
-    .svg-container,
-    .main-svg {
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
-    }
-
-    table {
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
-    }
-
-    h1, h2, h3, h4 {
-      page-break-after: avoid !important;
-      break-after: avoid !important;
-    }
-  `;
-
-  clone.prepend(style);
-  return clone;
-}
-
 
 document.getElementById("exportPdfBtn").addEventListener("click", async function () {
   const button = this;
   const iframe = document.querySelector("#results-container iframe");
 
   button.disabled = true;
-  button.textContent = "Preparing PDF...";
+  button.textContent = "Capturing graphs...";
 
   try {
     await waitForDashIframe(iframe);
 
-    const exportBody = await prepareDashForExport(iframe);
+    const iframeWindow = iframe.contentWindow;
+    const iframeDoc = iframeWindow.document;
+    const Plotly = iframeWindow.Plotly;
 
-    await html2pdf()
-      .set({
-        margin: [0, 0.5, 0, 0],
-        filename: "results-export.pdf",
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: {
-          scale: 1,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          width: iframe.contentDocument.body.scrollWidth,
-          height: iframe.contentDocument.body.scrollHeight,
-          scrollX: 0,
-          scrollY: 0
-        },
-        jsPDF: {
-          unit: "in",
-          format: "letter",
-          orientation: "portrait"
-        },
-        pagebreak: {
-          mode: ["css", "legacy"],
-          avoid: [".js-plotly-plot", ".plot-container", "table"]
-        }
-      })
-      .from(exportBody)
-      .save();
+    // Resize all plots to their current container dimensions before capture
+    const plots = Array.from(iframeDoc.querySelectorAll(".js-plotly-plot"));
+    plots.forEach(p => Plotly && Plotly.Plots.resize(p));
+    await wait(500);
 
+    // Capture each plot as PNG via Plotly's native export
+    const images = [];
+    for (const plot of plots) {
+      try {
+        const w = Math.max(plot.offsetWidth, 800);
+        const h = Math.max(plot.offsetHeight, 400);
+        const src = await Plotly.toImage(plot, { format: "png", width: w, height: h });
+        images.push(src);
+      } catch (e) {
+        console.warn("Plotly.toImage failed for plot:", e);
+      }
+    }
+
+    button.textContent = "Generating PDF...";
+
+    const resp = await fetch(exportPdfUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
+      },
+      body: JSON.stringify({ images }),
+    });
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Server error ${resp.status}: ${text.slice(0, 200)}`);
+    }
+
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "wefe_results.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+  } catch (e) {
+    console.error("PDF export failed:", e);
+    alert("PDF export failed: " + e.message);
   } finally {
     button.disabled = false;
     button.textContent = "Download Results as PDF";
   }
 });
-
 </script>
 {% endblock end_body_scripts %}

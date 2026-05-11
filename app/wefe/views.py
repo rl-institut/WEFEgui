@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Q, F, Avg, Max
 from django.forms import model_to_dict
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import *
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -25,6 +25,7 @@ from projects.models import *
 from projects.models.base_models import Timeseries
 from projects.views import project_duplicate, project_delete
 
+from wefe.exports import create_wefe_pdf_report
 from wefe.forms import *
 from wefe.helpers import *
 from wefe.models import MOOWeights, SurveyAnswer, WEFESimulation, WEFE_SIM_APP
@@ -758,6 +759,42 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
     if request.method == "POST":
         # TODO
         return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+
+
+@login_required
+@require_http_methods(["POST"])
+def wefe_export_pdf(request, proj_id):
+    import json as _json
+
+    project = get_object_or_404(Project, id=proj_id)
+    if (project.user != request.user) and (
+        project.viewers.filter(user__email=request.user.email, share_rights="edit").exists() is False
+    ):
+        raise PermissionDenied
+
+    scenario = project.scenario
+    simulation = WEFESimulation.objects.get(scenario=scenario, app=WEFE_SIM_APP)
+    results = _json.loads(simulation.results)["results"]
+    dash_tables = restore_dash_tables(results["dash_tables"])
+
+    tables = dash_tables["result_tables"]
+    services = dash_tables["service_tables"]
+    units = dash_tables["parameters_units"]
+
+    body = _json.loads(request.body)
+    image_list = body.get("images", [])
+
+    buffer = create_wefe_pdf_report(
+        project_name=project.name,
+        tables=tables,
+        services=services,
+        units=units,
+        image_list=image_list,
+    )
+
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="wefe_results.pdf"'
+    return response
 
 
 WEFE_STEPS = {
