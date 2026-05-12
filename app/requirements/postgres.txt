@@ -22,3 +22,5 @@ XlsxWriter
 datapackage
 whitenoise==6.9.0
 oemof_tabular_plugins @ git+https://github.com/rl-institut/oemof-tabular-plugins.git@production
+Pillow
+reportlab
