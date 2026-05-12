@@ -703,6 +703,7 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
     tables = dash_tables["result_tables"]
     services = dash_tables["service_tables"]
     units = dash_tables["parameters_units"]
+    verbose_names = dash_tables["verbose_names"]
     dash_app_name = f"results_dash_{proj_id}"
     app = DjangoDash(dash_app_name)
 
@@ -719,9 +720,17 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
 
     wefe_conf.process_survey(survey_answers)
     wefe_conf.process_demand()
+    wefe_conf.water_systems_postprocessing(survey_answers)
+    wefe_conf.waste_water_systems_postprocessing(survey_answers)
     wefe_conf.add_components()
     wefe_conf.add_buses()
     wefe_conf.add_sequences()
+
+    run_water_simplification = True  # default
+
+    # Apply simplification only when the flag is enabled.
+    if run_water_simplification:
+        wefe_conf.water_systems_simplification()
 
     prepare_app(
         app=app,
@@ -730,6 +739,7 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
         tables=tables,
         services=services,
         units=units,
+        label_map=verbose_names,
     )
 
     wefe_conf.cleanup()

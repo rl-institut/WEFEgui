@@ -1,17 +1,17 @@
-name;type;bus;marginal_cost;resource_cost;ghg_emission_factor;water_consumption_factor;indirect_water_consumption_factor
-ac-electricity-excess;excess;ac-elec-bus;0.0;0.0;0.0;0.0;0.0
-dc-electricity-excess;excess;dc-elec-bus;0.0;0.0;0.0;0.0;0.0
-brine-excess;excess;brine-bus;0.0;0.0;0.0;0.0;0.0
-excess-river-flow;excess;riverflow-bus;0.0;0.0;0.0;0.0;0.0
-excess-service-water;excess;service-water-bus;0.0;0.0;0.0;0.0;0.0
-excess-drinking-water;excess;drinking-water-bus;0.0;0.0;0.0;0.0;0.0
-greywater_disposal;excess;grey-water-bus;0.0;100000.0;100000.0;100000.0;100000.0
-blackwater_disposal;excess;black-water-bus;0.0;100000.0;100000.0;100000.0;100000.0
-excess-compost;excess;compost-bus;0.0;0.0;0.0;0.0;0.0
-excess-dry-feces;excess;dry-feces-bus;0.0;0.0;0.0;0.0;0.0
-excess-biomass;excess;biomass-bus;0.0;0.;0.0;0.0;0.0
-excess-N2;excess;N2-bus;0.0;0.0;0.0;0.0;0.0
-excess-human-feces;excess;human-feces-bus;0.0;100000.0;100000.0;100000.0;100000.0
-excess-human-urine;excess;human-urine-bus;0.0;100000.0;100000.0;100000.0;100000.0
-excess-animal-feces;excess;animal-feces-bus;0.0;100000.0;100000.0;100000.0;100000.0
-excess-animal-urine;excess;animal-urine-bus;0.0;100000.0;100000.0;100000.0;100000.0
+name;type;bus;marginal_cost;resource_cost;ghg_emission_factor;water_consumption_factor;indirect_water_consumption_factor;verbose_name
+ac-electricity-excess;excess;ac-elec-bus;0.0;0.0;0.0;0.0;0.0;"Excess AC Electricity"
+dc-electricity-excess;excess;dc-elec-bus;0.0;0.0;0.0;0.0;0.0;"Excess DC Electricity"
+brine-excess;excess;brine-bus;0.0;0.0;0.0;0.0;0.0;"Excess Brine"
+excess-river-flow;excess;riverflow-bus;0.0;0.0;0.0;0.0;0.0;"Excess River Flow"
+excess-service-water;excess;service-water-bus;0.0;0.0;0.0;0.0;0.0;"Excess Service Water"
+excess-drinking-water;excess;drinking-water-bus;0.0;0.0;0.0;0.0;0.0;"Excess Drinking Water"
+greywater_disposal;excess;grey-water-bus;0.0;100000.0;100000.0;100000.0;100000.0;"Grey Water Disposal"
+blackwater_disposal;excess;black-water-bus;0.0;100000.0;100000.0;100000.0;100000.0;"Black Water Disposal"
+excess-compost;excess;compost-bus;0.0;0.0;0.0;0.0;0.0;"Excess Compost"
+excess-dry-feces;excess;dry-feces-bus;0.0;0.0;0.0;0.0;0.0;"Excess Dry Feces"
+excess-biomass;excess;biomass-bus;0.0;0.;0.0;0.0;0.0;"Excess Biomass"
+excess-N2;excess;N2-bus;0.0;0.0;0.0;0.0;0.0;"Excess N2"
+excess-human-feces;excess;human-feces-bus;0.0;100000.0;100000.0;100000.0;100000.0;"Excess Human Feces"
+excess-human-urine;excess;human-urine-bus;0.0;100000.0;100000.0;100000.0;100000.0;"Excess Human Urine"
+excess-animal-feces;excess;animal-feces-bus;0.0;100000.0;100000.0;100000.0;100000.0;"Excess Animal Feces"
+excess-animal-urine;excess;animal-urine-bus;0.0;100000.0;100000.0;100000.0;100000.0;"Excess Animal Urine"
