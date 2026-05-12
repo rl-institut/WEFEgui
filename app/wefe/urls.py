@@ -40,4 +40,5 @@ urlpatterns = [
         fetch_simulation_results,
         name="fetch_wefe_simulation_results",
     ),
+    path("<int:proj_id>/export_pdf/", wefe_export_pdf, name="wefe_export_pdf"),
 ]

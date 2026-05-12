@@ -3,18 +3,21 @@
 {% load i18n %}
 {% load plotly_dash %}
 
-{% block title %} Dash Example  {% endblock title %}
+{% block start_body_scripts %}{% endblock start_body_scripts %}
+
+{% block title %} Results  {% endblock title %}
 
 {% block progression_content %}
-
-    <h2>Django + Dash Example</h2>
-
-    <!-- Hidden container with JSON payload -->
-    <div id="wefe-sim-data" style="display:none;">
-        {{ simulation.results|safe }}
+<section class="container">
+    <div id="results-container">
+        {% plotly_app name=dash_app ratio=1 %}
     </div>
-
-    {% plotly_app name=dash_app ratio=0.5 %}
+    <div style="display:flex;justify-content:center">
+    <button id="exportPdfBtn" class="btn btn--medium" style="margin-top:0.5rem">
+        Download Results as PDF
+    </button>
+    </div>
+</section>
 
 {% endblock progression_content %}
 
@@ -25,4 +28,96 @@
 {% endblock next_btn %}
 
 {% block end_body_scripts %}
+<script>
+const exportPdfUrl = "{% url 'wefe_export_pdf' proj_id %}";
+const csrfToken = "{{ csrf_token }}";
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function waitForDashIframe(iframe, timeout = 20000) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    if (doc) {
+      const loading = doc.querySelector("._dash-loading");
+      const graphs = doc.querySelectorAll(".js-plotly-plot");
+      if (!loading && graphs.length > 0) {
+        await wait(2000);
+        return;
+      }
+    }
+    await wait(300);
+  }
+  throw new Error("Dash app did not finish loading before export.");
+}
+
+document.getElementById("exportPdfBtn").addEventListener("click", async function () {
+  const button = this;
+  const iframe = document.querySelector("#results-container iframe");
+
+  button.disabled = true;
+  button.textContent = "Capturing graphs...";
+
+  try {
+    await waitForDashIframe(iframe);
+
+    const iframeWindow = iframe.contentWindow;
+    const iframeDoc = iframeWindow.document;
+    const Plotly = iframeWindow.Plotly;
+
+    // Resize all plots to their current container dimensions before capture
+    const plots = Array.from(iframeDoc.querySelectorAll(".js-plotly-plot"));
+    plots.forEach(p => Plotly && Plotly.Plots.resize(p));
+    await wait(500);
+
+    // Capture each plot as PNG via Plotly's native export
+    const images = [];
+    for (const plot of plots) {
+      try {
+        const w = Math.max(plot.offsetWidth, 800);
+        const h = Math.max(plot.offsetHeight, 400);
+        const src = await Plotly.toImage(plot, { format: "png", width: w, height: h });
+        images.push(src);
+      } catch (e) {
+        console.warn("Plotly.toImage failed for plot:", e);
+      }
+    }
+
+    button.textContent = "Generating PDF...";
+
+    const resp = await fetch(exportPdfUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
+      },
+      body: JSON.stringify({ images }),
+    });
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Server error ${resp.status}: ${text.slice(0, 200)}`);
+    }
+
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "wefe_results.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+  } catch (e) {
+    console.error("PDF export failed:", e);
+    alert("PDF export failed: " + e.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Download Results as PDF";
+  }
+});
+</script>
 {% endblock end_body_scripts %}
