@@ -21,8 +21,8 @@ animal-feces-bus;bus;True;feces;"Animal Feces";false
 animal-urine-bus;bus;True;urine;"Animal Urine";false
 black-water-bus;bus;True;water;"Black Water";true
 grey-water-bus;bus;True;water;"Grey Water";true
-wwtp-ip-water-bus;bus;True;water;;false
-wwtp-op-water-bus;bus;True;water;;false
+wwtp-ip-water-bus;bus;True;water;"Wastew. Treatm. Pl. Input";false
+wwtp-op-water-bus;bus;True;water;"Wastew. Treatm. Pl. Output";false
 biomass-bus;bus;True;biomass;"Biomass";true
 dry-feces-bus;bus;True;dry-feces;;false
 compost-bus;bus;True;compost;;false

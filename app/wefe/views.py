@@ -782,16 +782,19 @@ def wefe_export_pdf(request, proj_id):
     tables = dash_tables["result_tables"]
     services = dash_tables["service_tables"]
     units = dash_tables["parameters_units"]
+    verbose_names = dash_tables["verbose_names"]
 
     body = _json.loads(request.body)
     image_list = body.get("images", [])
 
     buffer = create_wefe_pdf_report(
+        dp_path=os.path.join(COMPONENT_TEMPLATES_PATH, "datapackage.json"),
         project_name=project.name,
         tables=tables,
         services=services,
         units=units,
         image_list=image_list,
+        label_map=verbose_names,
     )
 
     response = HttpResponse(buffer.getvalue(), content_type="application/pdf")

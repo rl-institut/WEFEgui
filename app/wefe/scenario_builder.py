@@ -970,7 +970,7 @@ class WEFEConfigurator:
                 df.set_index("name", drop=False, inplace=True)
 
                 # Strip the component documentation columns
-                selected_columns = [col for col in df.columns if col not in ["verbose_name", "description"]]
+                selected_columns = [col for col in df.columns if col not in ["description"]]
 
                 component_params = df.loc[component_type]
                 component_params = component_params[selected_columns]

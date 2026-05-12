@@ -2,6 +2,7 @@ import base64
 import io
 
 import pandas as pd
+from datapackage import Package
 from PIL import Image as PILImage
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -61,16 +62,18 @@ def _df_to_rl_table(df, page_width, cell_style, header_cell_style):
     return table
 
 
-def create_wefe_pdf_report(project_name, tables, services, units, image_list):
+def create_wefe_pdf_report(dp_path, project_name, tables, services, units, image_list, label_map=None):
     """
     Build a WEFE results PDF with ReportLab.
 
     Args:
+        dp_path: Path object to scenario datapackage
         project_name: str
         tables: dict of {name: DataFrame} — scalar result tables
         services: dict of {name: DataFrame} — service flow tables
         units: dict of {param_name: unit_string}
         image_list: list of base64 PNG data URLs from Plotly.toImage
+        label_map: dict of {param_name: verbose_name}
 
     Returns:
         BytesIO buffer containing the PDF
@@ -101,6 +104,28 @@ def create_wefe_pdf_report(project_name, tables, services, units, image_list):
 
     elements = []
 
+    # --- Verbose Names ---
+    p0 = Package(dp_path)
+
+    # Dynamic label mapping to use verbose names (if available)
+    if label_map is None:
+        label_map = {}
+
+    for resource_name in p0.resource_names:
+        try:
+            df = pd.DataFrame.from_records(p0.get_resource(resource_name).read(keyed=True))
+
+            if "name" in df.columns and "verbose_name" in df.columns:
+                label_map.update(
+                    {row["name"]: row["verbose_name"] for _, row in df.iterrows() if pd.notna(row["verbose_name"])}
+                )
+
+        except Exception:
+            pass
+
+    def display_name(name):
+        return label_map.get(name, name)
+
     # --- Title ---
     elements.append(Paragraph("WEFE Results Report", base_styles["Title"]))
     elements.append(Paragraph(f"Project: {project_name}", h2))
@@ -112,13 +137,18 @@ def create_wefe_pdf_report(project_name, tables, services, units, image_list):
     # Capacities
     if "capacities" in tables:
         elements.append(Paragraph("Capacities", h2))
-        elements.append(_df_to_rl_table(tables["capacities"], page_width, cell, header_cell))
+        df = tables["capacities"]
+        if "Component name" in df.columns:
+            df["Component name"] = df["Component name"].apply(display_name)
+        elements.append(_df_to_rl_table(df, page_width, cell, header_cell))
         elements.append(Spacer(1, 0.15 * inch))
 
     # KPIs — augment with units from parameters_units
     if "kpis" in tables:
         elements.append(Paragraph("KPIs", h2))
         kpis_df = tables["kpis"].reset_index()  # → columns: [kpi, value]
+        if "kpi" in kpis_df.columns:
+            kpis_df["kpi"] = kpis_df["kpi"].apply(display_name)
         kpis_df["unit"] = kpis_df["kpi"].map(units).fillna("")
         elements.append(_df_to_rl_table(kpis_df, page_width, cell, header_cell))
         elements.append(Spacer(1, 0.15 * inch))
@@ -136,6 +166,8 @@ def create_wefe_pdf_report(project_name, tables, services, units, image_list):
         elements.append(Paragraph("Services", h1))
         for name, df in services.items():
             elements.append(Paragraph(name, h2))
+            if "asset" in df.columns:
+                df["asset"] = df["asset"].apply(display_name)
             elements.append(_df_to_rl_table(df, page_width, cell, header_cell))
             elements.append(Spacer(1, 0.15 * inch))
 
