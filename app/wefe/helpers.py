@@ -100,7 +100,7 @@ def get_renewables_output(proj_id, raw=True):
 
 
 class KoboHandler:
-    base_survey_id = "aUTPpjLwttttNPF2tJgLKM"
+    base_survey_id = "aKHX8DMDaQ6VAHuBzgSwCZ"
     request_headers = {"Accept": "application/json", "Authorization": "Token " + str(KOBO_API_TOKEN)}
 
     def __init__(self, project):
@@ -150,6 +150,15 @@ class KoboHandler:
                             counts[field] += 1
                     except KeyError:
                         counts["respondent_unknown"] += 1
+
+            counts["respondent_household"] = (
+                nr_responses
+                - counts["respondent_local_aut"]
+                - counts["respondent_service"]
+                - counts["respondent_large_scale_farm"]
+                - counts["respondent_business"]
+                - counts["respondent_unknown"]
+            )
 
         return counts
 
