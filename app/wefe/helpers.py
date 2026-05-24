@@ -100,7 +100,7 @@ def get_renewables_output(proj_id, raw=True):
 
 
 class KoboHandler:
-    base_survey_id = "aNq6WVSzx6Bst2c4FFpr4z"
+    base_survey_id = "aKHX8DMDaQ6VAHuBzgSwCZ"
     request_headers = {"Accept": "application/json", "Authorization": "Token " + str(KOBO_API_TOKEN)}
 
     def __init__(self, project):
