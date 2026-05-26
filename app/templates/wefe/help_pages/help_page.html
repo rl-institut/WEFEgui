@@ -1,0 +1,98 @@
+{% extends 'wefe/base.html' %}
+{% load custom_filters %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load i18n %}
+
+{% block head_block %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" crossorigin=""
+          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="/>
+    <link rel="stylesheet" href="{% static 'css/map.css' %}" type="text/css">
+{% endblock head_block %}
+
+{% block start_body_scripts %}
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" crossorigin=""
+            integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==">
+    </script>
+{% endblock %}
+
+{% block title %}{% translate "Help" %}{% endblock title %}
+
+{% block content %}
+
+
+<main>
+    <section class="header">
+        <div>
+            <div class="header__left"></div>
+            <h1 class="header__title">{% translate "Help" %}</h1>
+            <div class="header__back"></div>
+        </div>
+    </section>
+    <section class="project-setup two-columns">
+        <div class="col-md-3">
+            <nav style="position: fixed; background-color:#E6F7EE">
+                <ul class="nav flex-column" id="help_sidebar">
+                    {% for step, verbose in steps %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#section-{{ step }}">{{ verbose }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </div>
+		<div class="col-md-7" id="help_content">
+            <div>
+			{% for step, verbose in steps %}
+			<div id="section-{{ step }}" style="padding-top: 1rem; padding-bottom: 1rem">
+				<h2>{{ verbose }}</h2>
+				<div class="section-content" data-step="{{ step }}"></div>
+			</div>
+			{% endfor %}
+            </div>
+		</div>
+    </section>
+</main>
+
+
+{% endblock content %}
+
+{% block end_body_scripts %}
+
+<script>
+    function loadHelpContent(step) {
+        $.ajax({
+            url: "{% url 'ajax_help_page' %}",
+            data: {
+                'selected_step': step
+            },
+            success: function (data) {
+                document.querySelector(`#section-${step} .section-content`).innerHTML = data;
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Load content for each section
+        document.querySelectorAll('.section-content').forEach(function(section) {
+            var step = section.getAttribute('data-step');
+            loadHelpContent(step);
+        });
+
+        // Add smooth scrolling to sidebar links
+        document.querySelectorAll('#help_sidebar .nav-link').forEach(function(link) {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                var targetId = link.getAttribute('href');
+                var targetElement = document.querySelector(targetId);
+                var offset = 120;
+                var targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });            });
+        });
+    });
+</script>
+
+{% endblock end_body_scripts %}

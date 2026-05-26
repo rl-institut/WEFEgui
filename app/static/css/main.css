@@ -502,6 +502,13 @@ h4 {
   font-size: 18px;
   text-transform: uppercase; }
 
+span.helpvar {
+font-weight: bold;
+color: #2c3e50;
+background-color: #ecf0f1;
+padding: 0.2rem 0.2rem;
+border-radius: 0.2rem; }
+
 .cpn-accordion .accordion-button {
   color: #54504C;
   background-color: #FDF6E2; }
