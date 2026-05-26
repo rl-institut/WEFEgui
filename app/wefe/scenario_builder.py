@@ -333,12 +333,29 @@ class WEFEConfigurator:
             df_bus = pd.read_csv(bus_path, sep=";")
             df_bus = df_bus[~df_bus["name"].str.startswith(("DW_", "SW_"))]
 
+            # Lookup for verbose_name and plot per new intermediate bus
+            bus_metadata = {
+                "DW_pre_treatment_out_bus": {"verbose_name": "DW Pre-Treatment Output", "plot": False},
+                "DW_core_treatment_out_bus": {"verbose_name": "DW Core-Treatment Output", "plot": False},
+                "SW_pre_treatment_out_bus": {"verbose_name": "SW Pre-Treatment Output", "plot": False},
+                "SW_core_treatment_out_bus": {"verbose_name": "SW Core-Treatment Output", "plot": False},
+            }
+
             bus_names = ["DW_pre_treatment_out_bus", "DW_core_treatment_out_bus"]
 
             if has_sw:
                 bus_names.extend(["SW_pre_treatment_out_bus", "SW_core_treatment_out_bus"])
 
-            simplified_buses = pd.DataFrame({"name": bus_names, "type": "bus", "balanced": True, "carrier": "water"})
+            simplified_buses = pd.DataFrame(
+                {
+                    "name": bus_names,
+                    "type": "bus",
+                    "balanced": True,
+                    "carrier": "water",
+                    "verbose_name": [bus_metadata[n]["verbose_name"] for n in bus_names],
+                    "plot": [bus_metadata[n]["plot"] for n in bus_names],
+                }
+            )
 
             df_bus = pd.concat([df_bus, simplified_buses], ignore_index=True)
             df_bus = df_bus.drop_duplicates(subset=["name"], keep="last")
@@ -395,6 +412,16 @@ class WEFEConfigurator:
         # TODO: Improve the aggregation/compression logic in the following function for each of the three water treatment sections.
 
         def aggregate_component_block(df, prefix, block_name, water_in_bus, water_out_bus):
+
+            verbose_name_map = {
+                "DW_pre_treatment": "DW Pre-Treatment",
+                "SW_pre_treatment": "SW Pre-Treatment",
+                "DW_core_treatment": "DW Core-Treatment",
+                "SW_core_treatment": "SW Core-Treatment",
+                "DW_post_treatment": "DW Post-Treatment",
+                "SW_post_treatment": "SW Post-Treatment",
+            }
+
             sub = df[df["name"].str.startswith(prefix)].copy()
 
             if sub.empty:
@@ -441,6 +468,12 @@ class WEFEConfigurator:
                 if col not in row:
                     non_null = sub[col].dropna()
                     row[col] = non_null.iloc[0] if not non_null.empty else None
+
+            # Always set verbose_name from lookup, regardless of aggregated value
+            component_key = f"{prefix.rstrip('_')}_{block_name}"
+            row["verbose_name"] = verbose_name_map.get(
+                component_key, f"{prefix.rstrip('_')} {block_name.replace('_', ' ').title()}"
+            )
 
             row_df = pd.DataFrame([row])
             row_df = row_df[[c for c in df.columns if c in row_df.columns]]  # reorder columns
@@ -604,7 +637,11 @@ class WEFEConfigurator:
                 component_key = self.add_single_component(
                     component_type="constructed_wetland",
                     component_name="black_water_cw",
-                    component_attrs={"water_in_bus": "black-water-bus", "water_out_bus": "wwtp-ip-water-bus"},
+                    component_attrs={
+                        "water_in_bus": "black-water-bus",
+                        "water_out_bus": "wwtp-ip-water-bus",
+                        "verbose_name": "Black Water Constructed Wetland",
+                    },
                 )
                 capacity = survey["7.1.1"]
                 if capacity not in (None, "", " "):
@@ -614,7 +651,11 @@ class WEFEConfigurator:
                 component_key = self.add_single_component(
                     component_type="septic_system",
                     component_name="black_water_septic",
-                    component_attrs={"water_in_bus": "black-water-bus", "water_out_bus": "wwtp-ip-water-bus"},
+                    component_attrs={
+                        "water_in_bus": "black-water-bus",
+                        "water_out_bus": "wwtp-ip-water-bus",
+                        "verbose_name": "Black Water Septic",
+                    },
                 )
                 capacity = survey["7.1.0"]
                 if capacity not in (None, "", " "):
@@ -626,7 +667,11 @@ class WEFEConfigurator:
             component_key = self.add_single_component(
                 component_type="constructed_wetland",
                 component_name="grey_water_cw",
-                component_attrs={"water_in_bus": "grey-water-bus", "water_out_bus": "wwtp-ip-water-bus"},
+                component_attrs={
+                    "water_in_bus": "grey-water-bus",
+                    "water_out_bus": "wwtp-ip-water-bus",
+                    "verbose_name": "Grey Water Constructed Wetland",
+                },
             )
             capacity = survey["7.1.1"]
             if capacity not in (None, "", " "):
@@ -637,7 +682,11 @@ class WEFEConfigurator:
             component_key = self.add_single_component(
                 component_type="septic_system",
                 component_name="grey_water_septic",
-                component_attrs={"water_in_bus": "grey-water-bus", "water_out_bus": "wwtp-ip-water-bus"},
+                component_attrs={
+                    "water_in_bus": "grey-water-bus",
+                    "water_out_bus": "wwtp-ip-water-bus",
+                    "verbose_name": "Grey Water Septic",
+                },
             )
             self.add_single_component(component_type="hh_gw_waste")
             capacity = survey["7.1.0"]
@@ -1200,10 +1249,11 @@ class WEFEConfigurator:
         bus_ref = self.get_single_component_from_datapackage(dp=dp_ref, resource_name="bus", component_name=name)
         if bus_ref.empty:
             self.additional_busses.append(name)
+            bus = pd.Series({"name": name, "type": "bus", "balanced": balanced, "carrier": carrier}).to_frame().T
+        else:
+            bus = bus_ref  # ← full row with verbose_name, plot, etc.
 
         ofname = os.path.join(self.scenario_component_folder, "bus.csv")
-        bus = pd.Series({"name": name, "type": "bus", "balanced": balanced, "carrier": carrier}).to_frame().T
-        # Write or modify the bus in the new datapackage
         if os.path.exists(ofname):
             busses_df = pd.read_csv(ofname, sep=";")
             existing_records = busses_df.name.tolist()

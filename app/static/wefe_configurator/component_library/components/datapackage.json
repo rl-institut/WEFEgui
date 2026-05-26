@@ -837,6 +837,11 @@
                         "name": "output_parameters",
                         "type": "object",
                         "format": "default"
+                    },
+                    {
+                        "name": "verbose_name",
+                        "type": "string",
+                        "format": "default"
                     }
                 ],
                 "missingValues": [
