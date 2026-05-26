@@ -24,12 +24,12 @@ grey-water-bus;bus;True;water;"Grey Water";true
 wwtp-ip-water-bus;bus;True;water;"Wastew. Treatm. Pl. Input";false
 wwtp-op-water-bus;bus;True;water;"Wastew. Treatm. Pl. Output";false
 biomass-bus;bus;True;biomass;"Biomass";true
-dry-feces-bus;bus;True;dry-feces;;false
-compost-bus;bus;True;compost;;false
-water-in-bus;bus;True;water;;false
-water-out-bus;bus;True;water;;false
+dry-feces-bus;bus;True;dry-feces;"Dry Feces";false
+compost-bus;bus;True;compost;"Compost";false
+water-in-bus;bus;True;water;"Water Inlet";false
+water-out-bus;bus;True;water;"Water Outlet";false
 biogas-bus;bus;True;biogas;"Biogas";true
-N2-bus;bus;True;N2;;false
+N2-bus;bus;True;N2;"Nitrogen";false
 untreated-water-bus;bus;True;water;"Untreated Water";true
 river-water-bus;bus;True;water;"River Water";true
 lake-water-bus;bus;True;water;"Lake Water";true
