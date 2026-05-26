@@ -637,7 +637,11 @@ class WEFEConfigurator:
                 component_key = self.add_single_component(
                     component_type="constructed_wetland",
                     component_name="black_water_cw",
-                    component_attrs={"water_in_bus": "black-water-bus", "water_out_bus": "wwtp-ip-water-bus"},
+                    component_attrs={
+                        "water_in_bus": "black-water-bus",
+                        "water_out_bus": "wwtp-ip-water-bus",
+                        "verbose_name": "Black Water Constructed Wetland",
+                    },
                 )
                 capacity = survey["7.1.1"]
                 if capacity not in (None, "", " "):
@@ -647,7 +651,11 @@ class WEFEConfigurator:
                 component_key = self.add_single_component(
                     component_type="septic_system",
                     component_name="black_water_septic",
-                    component_attrs={"water_in_bus": "black-water-bus", "water_out_bus": "wwtp-ip-water-bus"},
+                    component_attrs={
+                        "water_in_bus": "black-water-bus",
+                        "water_out_bus": "wwtp-ip-water-bus",
+                        "verbose_name": "Black Water Septic",
+                    },
                 )
                 capacity = survey["7.1.0"]
                 if capacity not in (None, "", " "):
@@ -659,7 +667,11 @@ class WEFEConfigurator:
             component_key = self.add_single_component(
                 component_type="constructed_wetland",
                 component_name="grey_water_cw",
-                component_attrs={"water_in_bus": "grey-water-bus", "water_out_bus": "wwtp-ip-water-bus"},
+                component_attrs={
+                    "water_in_bus": "grey-water-bus",
+                    "water_out_bus": "wwtp-ip-water-bus",
+                    "verbose_name": "Grey Water Constructed Wetland",
+                },
             )
             capacity = survey["7.1.1"]
             if capacity not in (None, "", " "):
@@ -670,7 +682,11 @@ class WEFEConfigurator:
             component_key = self.add_single_component(
                 component_type="septic_system",
                 component_name="grey_water_septic",
-                component_attrs={"water_in_bus": "grey-water-bus", "water_out_bus": "wwtp-ip-water-bus"},
+                component_attrs={
+                    "water_in_bus": "grey-water-bus",
+                    "water_out_bus": "wwtp-ip-water-bus",
+                    "verbose_name": "Grey Water Septic",
+                },
             )
             self.add_single_component(component_type="hh_gw_waste")
             capacity = survey["7.1.0"]
