@@ -333,12 +333,29 @@ class WEFEConfigurator:
             df_bus = pd.read_csv(bus_path, sep=";")
             df_bus = df_bus[~df_bus["name"].str.startswith(("DW_", "SW_"))]
 
+            # Lookup for verbose_name and plot per new intermediate bus
+            bus_metadata = {
+                "DW_pre_treatment_out_bus": {"verbose_name": "DW Pre-Treatment Output", "plot": False},
+                "DW_core_treatment_out_bus": {"verbose_name": "DW Core-Treatment Output", "plot": False},
+                "SW_pre_treatment_out_bus": {"verbose_name": "SW Pre-Treatment Output", "plot": False},
+                "SW_core_treatment_out_bus": {"verbose_name": "SW Core-Treatment Output", "plot": False},
+            }
+
             bus_names = ["DW_pre_treatment_out_bus", "DW_core_treatment_out_bus"]
 
             if has_sw:
                 bus_names.extend(["SW_pre_treatment_out_bus", "SW_core_treatment_out_bus"])
 
-            simplified_buses = pd.DataFrame({"name": bus_names, "type": "bus", "balanced": True, "carrier": "water"})
+            simplified_buses = pd.DataFrame(
+                {
+                    "name": bus_names,
+                    "type": "bus",
+                    "balanced": True,
+                    "carrier": "water",
+                    "verbose_name": [bus_metadata[n]["verbose_name"] for n in bus_names],
+                    "plot": [bus_metadata[n]["plot"] for n in bus_names],
+                }
+            )
 
             df_bus = pd.concat([df_bus, simplified_buses], ignore_index=True)
             df_bus = df_bus.drop_duplicates(subset=["name"], keep="last")
@@ -395,6 +412,16 @@ class WEFEConfigurator:
         # TODO: Improve the aggregation/compression logic in the following function for each of the three water treatment sections.
 
         def aggregate_component_block(df, prefix, block_name, water_in_bus, water_out_bus):
+
+            verbose_name_map = {
+                "DW_pre_treatment": "DW Pre-Treatment",
+                "SW_pre_treatment": "SW Pre-Treatment",
+                "DW_core_treatment": "DW Core-Treatment",
+                "SW_core_treatment": "SW Core-Treatment",
+                "DW_post_treatment": "DW Post-Treatment",
+                "SW_post_treatment": "SW Post-Treatment",
+            }
+
             sub = df[df["name"].str.startswith(prefix)].copy()
 
             if sub.empty:
@@ -441,6 +468,12 @@ class WEFEConfigurator:
                 if col not in row:
                     non_null = sub[col].dropna()
                     row[col] = non_null.iloc[0] if not non_null.empty else None
+
+            # Always set verbose_name from lookup, regardless of aggregated value
+            component_key = f"{prefix.rstrip('_')}_{block_name}"
+            row["verbose_name"] = verbose_name_map.get(
+                component_key, f"{prefix.rstrip('_')} {block_name.replace('_', ' ').title()}"
+            )
 
             row_df = pd.DataFrame([row])
             row_df = row_df[[c for c in df.columns if c in row_df.columns]]  # reorder columns
