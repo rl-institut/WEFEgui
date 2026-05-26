@@ -17,7 +17,9 @@
 <section class="container-lg">
 	<div class="row">
 		<div class="col">
-			<p>Welcome to the survey</p>
+			<p><b>Note:</b> Information submitted under "other” will not be considered during modelling, and is only collected for future development.
+
+  </p>
 			<form id="surveyQuestions" action="{% url 'submit_survey' scen_id %}" method="POST">
 				{% csrf_token %}
 				<div class="container accordion" id="accordionQuestions">
@@ -29,7 +31,7 @@
 							</button>
 						</h3>
 
-						<div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading-{{ forloop.counter }}" data-bs-parent="#accordionQuestions">
+						<div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %} {% if cat in faulty_fields_cat %} show {% endif %}" aria-labelledby="heading-{{ forloop.counter }}" data-bs-parent="#accordionQuestions">
 							<div class="accordion-body cpn-business__questionnaire">
 								{% setvar False as matrix_current %}
 								{% for field in form %}
@@ -37,6 +39,11 @@
 										{% if field|is_matrix %}
 											{% comment %} here are the subquestion in matrix form {% endcomment %}
 											{{ field }}
+											{% for error in field.errors %}
+											<div class="row">
+												<p style="color:red"><b>{{ error }}</b></p>
+											</div>
+											{% endfor %}
 										{% else %}
 											<div class="form-group{% if field.errors %} invalid{% endif %}{% if field|is_subsubquestion %} subsubquestion{% endif %}{% if field|is_subquestion %} subquestion{% if field.initial %}{% else %} disabled {% endif %}{% endif %}">
 											{% if field.label|is_water_header %}

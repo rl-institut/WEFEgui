@@ -1,10 +1,11 @@
-FROM python:3.11.13
+FROM python:3.10
 
 RUN echo POSTGRES
 ENV APP_ROOT /src
 ENV CONFIG_ROOT /config
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ARG CACHE_BUST=1
 
 RUN mkdir ${CONFIG_ROOT}
 COPY app/requirements/postgres.txt ${CONFIG_ROOT}/production.txt

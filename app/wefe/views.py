@@ -8,12 +8,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Q, F, Avg, Max
 from django.forms import model_to_dict
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import *
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
+from django_plotly_dash import DjangoDash
 from jsonview.decorators import json_view
+from oemof_tabular_plugins.general import prepare_app
 
 from business_model.forms import *
 from business_model.models import *
@@ -23,14 +25,14 @@ from projects.models import *
 from projects.models.base_models import Timeseries
 from projects.views import project_duplicate, project_delete
 
+from wefe.exports import create_wefe_pdf_report
 from wefe.forms import *
 from wefe.helpers import *
-from wefe.models import MOOWeights, SurveyAnswer, WEFESimulation
+from wefe.models import MOOWeights, SurveyAnswer, WEFESimulation, WEFE_SIM_APP
 from wefe.requests import (
-    fetch_wefedemand_simulation_results,
+    fetch_wefe_simulation_results,
     wefedemand_simulation_request,
     wefesim_simulation_request,
-    fetch_wefesim_simulation_results,
 )
 from wefe.scenario_builder import WEFEConfigurator
 from wefe.survey import SURVEY_CATEGORIES, SURVEY_QUESTIONS_CATEGORIES, get_survey_question_by_id
@@ -238,24 +240,17 @@ def wefe_demand(request, proj_id, step_id=STEP_MAPPING["demand"]):
             "step_id": step_id,
             "sim_id": simulation.id,
             "simulation_status": simulation.status,
+            "simulation_errors": simulation.errors,
             "step_list": WEFE_STEP_VERBOSE,
             "page_information": page_information,
         }
 
         if project.kobo_survey_id is not None:
-            context.update({"survey_id": project.kobo_survey_id, "survey_url": project.kobo_survey_url})
-
-        # if os.path.exists(output_path):
-        #     output_data = pd.read_csv(f"wefe/demand_data/{SURVEY_KEY}/.csv", index_col="datetime", decimal=",")
-        #     water_demand = output_data.loc[:, output_data.columns.str.contains("water")]
-        #     electricity_demand = output_data.loc[:, ~output_data.columns.str.contains("water")]
-        #     context.update(
-        #         {
-        #             "timestamps": scenario.get_timestamps(json_format=True),
-        #             "water_demand": water_demand.to_dict(orient="list"),
-        #             "electricity_demand": electricity_demand.to_dict(orient="list"),
-        #         }
-        #     )
+            kobo = KoboHandler(project)
+            counts = kobo.get_data_summary(kobo.project_survey_id)
+            context.update(
+                {"survey_id": project.kobo_survey_id, "survey_url": project.kobo_survey_url, "kobo_counts": counts}
+            )
 
         return render(request, "wefe/steps/demand.html", context)
 
@@ -360,9 +355,17 @@ def request_wefesim_simulation(request, proj_id=None, default_datapackage="false
 
         wefe_conf.process_survey(survey_answers)
         wefe_conf.process_demand()
+        wefe_conf.water_systems_postprocessing(survey_answers)
+        wefe_conf.waste_water_systems_postprocessing(survey_answers)
         wefe_conf.add_components()
         wefe_conf.add_buses()
         wefe_conf.add_sequences()
+
+        run_water_simplification = True  # default
+
+        # Apply simplification only when the flag is enabled.
+        if run_water_simplification:
+            wefe_conf.water_systems_simplification()
 
         # Turn datapackage data and metadata into single json
         scenario_dir = Path(wefe_conf.scenario_folder)
@@ -410,6 +413,9 @@ def request_wefesim_simulation(request, proj_id=None, default_datapackage="false
 
         # Create empty Simulation model object
         simulation = WEFESimulation(start_date=datetime.now(), scenario_id=scen_id, app="wefesim")
+        # simulation.datapackage = (
+        #     sim_data  # store datapackage for dash app...but this is jsonified and holds more data than needed
+        # )
 
         simulation.mvs_token = results["id"] if results["id"] else None
 
@@ -477,7 +483,7 @@ def wefe_system_layout(request, proj_id, step_id=STEP_MAPPING["system_layout"]):
                 crit.value = json.dumps(value) if not isinstance(value, str) else value
                 crit.save(update_fields=["value"])
 
-        answer = HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+            return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
 
     else:
         if scen_id is None:
@@ -487,14 +493,24 @@ def wefe_system_layout(request, proj_id, step_id=STEP_MAPPING["system_layout"]):
             if last_scenario_id is None:
                 last_scenario_id = 0
             scenario_id = last_scenario_id + 1
-            answer = HttpResponseRedirect(reverse("view_survey", args=[scenario_id]))
+            return HttpResponseRedirect(reverse("view_survey", args=[scenario_id]))
         else:
             scenario_id = scen_id
 
             # Check if answers already exists, if not create them
             qs_answer = SurveyAnswer.objects.filter(scenario_id=scenario_id)
-            # import pdb;pdb.set_trace()
-            if qs_answer.exists() is False:
+            create_new_form = False
+            if qs_answer.exists():
+                try:
+                    form = SurveyQuestionForm(qs=qs_answer)
+                # Could be caused by outdated survey answers
+                except ObjectDoesNotExist:
+                    create_new_form = True
+                    pass
+            else:
+                create_new_form = True
+
+            if create_new_form:
                 questions = SurveyQuestion.objects.all()
                 print(questions)
                 for question in questions:
@@ -506,53 +522,62 @@ def wefe_system_layout(request, proj_id, step_id=STEP_MAPPING["system_layout"]):
                     new_answer.save()
                 qs_answer = SurveyAnswer.objects.filter(scenario_id=scenario_id)
 
-            categories = [cat for cat in SURVEY_QUESTIONS_CATEGORIES.keys()]
-            form = SurveyQuestionForm(qs=qs_answer)
-            categories_map = []
-            matrix_headers = {}
-            matrix_labels = {}
-            for field in form.fields:
-                question_id = field.split("criteria_")[1]
-                # TODO: could be done from models "category" attribute
-                cat = SURVEY_CATEGORIES.get(question_id)
-                # TODO: reassign cat after testing phase is over
-                categories_map.append(cat)
-                # TODO here one can know that the question
-                if is_matrix_source(form.fields[field]):
-                    subs = []
-                    labels = []
-                    question = get_survey_question_by_id(SURVEY_STRUCTURE, question_id)
-                    for answer, subquestions in question["subquestion"].items():
-                        labels.append(answer)
-                        for sq_id in subquestions:
-                            q_main_id = ".".join(sq_id.split(".")[:2])
-                            subquestion = get_survey_question_by_id(SURVEY_STRUCTURE, sq_id)
-                            # print(subquestion)
-                            if subquestion.get("display_type", "") == "matrix":
-                                if subquestion["question"] not in subs:
-                                    subs.append(subquestion["question"])
-                    matrix_headers[field] = subs
-                    matrix_labels[field] = labels
-            page_information = "This survey will allow the user to build and simulate an energy system"
+                form = SurveyQuestionForm(qs=qs_answer)
 
-            answer = render(
-                request,
-                "wefe/steps/survey_layout.html",
-                {
-                    "form": form,
-                    "scen_id": scenario_id,
-                    "categories_map": categories_map,
-                    "categories": categories,
-                    "categories_verbose": SURVEY_QUESTIONS_CATEGORIES,
-                    "matrix_headers": matrix_headers,
-                    "matrix_labels": matrix_labels,
-                    "proj_id": proj_id,
-                    "proj_name": project.name,
-                    "step_id": step_id,
-                    "step_list": WEFE_STEP_VERBOSE,
-                    "page_information": page_information,
-                },
-            )
+    categories = [cat for cat in SURVEY_QUESTIONS_CATEGORIES.keys()]
+    categories_map = []
+    matrix_headers = {}
+    matrix_labels = {}
+
+    for field in form.fields:
+        question_id = field.split("criteria_")[1]
+        # TODO: could be done from models "category" attribute
+        cat = SURVEY_CATEGORIES.get(question_id)
+        # TODO: reassign cat after testing phase is over
+        categories_map.append(cat)
+        # TODO here one can know that the question
+        if is_matrix_source(form.fields[field]):
+            subs = []
+            labels = []
+            question = get_survey_question_by_id(SURVEY_STRUCTURE, question_id)
+            for answer, subquestions in question["subquestion"].items():
+                labels.append(answer)
+                for sq_id in subquestions:
+                    q_main_id = ".".join(sq_id.split(".")[:2])
+                    subquestion = get_survey_question_by_id(SURVEY_STRUCTURE, sq_id)
+                    # print(subquestion)
+                    if subquestion.get("display_type", "") == "matrix":
+                        if subquestion["question"] not in subs:
+                            subs.append(subquestion["question"])
+            matrix_headers[field] = subs
+            matrix_labels[field] = labels
+
+    page_information = "This survey will allow the user to build and simulate an energy system"
+
+    # Check which categories have field errors, so we can display them as open in the accordeon and the user can see the issue
+    faulty_fields = [k.replace("criteria_", "") for k in form.errors.keys()]
+    faulty_fields_cat = [SURVEY_CATEGORIES.get(q) for q in faulty_fields]
+    faulty_fields_cat = set(faulty_fields_cat)
+
+    answer = render(
+        request,
+        "wefe/steps/survey_layout.html",
+        {
+            "form": form,
+            "scen_id": scen_id,
+            "categories_map": categories_map,
+            "categories": categories,
+            "categories_verbose": SURVEY_QUESTIONS_CATEGORIES,
+            "faulty_fields_cat": faulty_fields_cat,
+            "matrix_headers": matrix_headers,
+            "matrix_labels": matrix_labels,
+            "proj_id": proj_id,
+            "proj_name": project.name,
+            "step_id": step_id,
+            "step_list": WEFE_STEP_VERBOSE,
+            "page_information": page_information,
+        },
+    )
 
     return answer
 
@@ -636,7 +661,7 @@ def wefe_simulation(request, proj_id, step_id=STEP_MAPPING["simulation"]):
             simulation = qs.first()
 
             if simulation.status == PENDING:
-                fetch_wefesim_simulation_results(simulation)
+                fetch_wefe_simulation_results(simulation)
 
             context.update(
                 {
@@ -672,6 +697,53 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
         raise PermissionDenied
 
     scenario = project.scenario
+    simulation = WEFESimulation.objects.get(scenario=scenario, app=WEFE_SIM_APP)
+    results = json.loads(simulation.results)["results"]
+    dash_tables = restore_dash_tables(results["dash_tables"])
+
+    tables = dash_tables["result_tables"]
+    services = dash_tables["service_tables"]
+    units = dash_tables["parameters_units"]
+    verbose_names = dash_tables["verbose_names"]
+    dash_app_name = f"results_dash_{proj_id}"
+    app = DjangoDash(dash_app_name)
+
+    df_results = df_from_split_multiindex(
+        results["df_results"], index_names=["bus", "direction", "asset", "carrier", "facade_type"]
+    )
+
+    qs = SurveyAnswer.objects.filter(scenario_id=scenario.id)
+    survey_answers = {}
+    for ans in qs:
+        survey_answers.update(ans.export(ignore_empty=True))
+
+    wefe_conf = WEFEConfigurator(scen_id=scenario.id, overwrite=False)
+
+    wefe_conf.process_survey(survey_answers)
+    wefe_conf.process_demand()
+    wefe_conf.water_systems_postprocessing(survey_answers)
+    wefe_conf.waste_water_systems_postprocessing(survey_answers)
+    wefe_conf.add_components()
+    wefe_conf.add_buses()
+    wefe_conf.add_sequences()
+
+    run_water_simplification = True  # default
+
+    # Apply simplification only when the flag is enabled.
+    if run_water_simplification:
+        wefe_conf.water_systems_simplification()
+
+    prepare_app(
+        app=app,
+        dp_path=os.path.join(wefe_conf.scenario_folder, "datapackage.json"),
+        results=df_results,
+        tables=tables,
+        services=services,
+        units=units,
+        label_map=verbose_names,
+    )
+
+    wefe_conf.cleanup()
 
     page_information = "Results page with report option"
     context = {
@@ -680,14 +752,54 @@ def wefe_results(request, proj_id, step_id=STEP_MAPPING["results"]):
         "step_id": step_id,
         "step_list": WEFE_STEP_VERBOSE,
         "page_information": page_information,
+        "dash_app": dash_app_name,
     }
 
     if request.method == "GET":
-        return render(request, "wefe/steps/step_progression.html", context)
+        return render(request, "wefe/steps/results.html", context)
 
     if request.method == "POST":
         # TODO
         return HttpResponseRedirect(reverse("wefe_steps", args=[proj_id, step_id + 1]))
+
+
+@login_required
+@require_http_methods(["POST"])
+def wefe_export_pdf(request, proj_id):
+    import json as _json
+
+    project = get_object_or_404(Project, id=proj_id)
+    if (project.user != request.user) and (
+        project.viewers.filter(user__email=request.user.email, share_rights="edit").exists() is False
+    ):
+        raise PermissionDenied
+
+    scenario = project.scenario
+    simulation = WEFESimulation.objects.get(scenario=scenario, app=WEFE_SIM_APP)
+    results = _json.loads(simulation.results)["results"]
+    dash_tables = restore_dash_tables(results["dash_tables"])
+
+    tables = dash_tables["result_tables"]
+    services = dash_tables["service_tables"]
+    units = dash_tables["parameters_units"]
+    verbose_names = dash_tables["verbose_names"]
+
+    body = _json.loads(request.body)
+    image_list = body.get("images", [])
+
+    buffer = create_wefe_pdf_report(
+        dp_path=os.path.join(COMPONENT_TEMPLATES_PATH, "datapackage.json"),
+        project_name=project.name,
+        tables=tables,
+        services=services,
+        units=units,
+        image_list=image_list,
+        label_map=verbose_names,
+    )
+
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="wefe_results.pdf"'
+    return response
 
 
 WEFE_STEPS = {
@@ -810,13 +922,13 @@ def ajax_process_survey(request):
 @json_view
 @login_required
 @require_http_methods(["GET"])
-def fetch_wefe_simulation_results(request, sim_id):
+def fetch_simulation_results(request, sim_id):
     print(f"Fetching results for sim {sim_id}")
     simulation = get_object_or_404(WEFESimulation, id=sim_id)
-    are_result_ready = fetch_wefedemand_simulation_results(simulation)
-    print(are_result_ready)
+    are_result_ready = fetch_wefe_simulation_results(simulation)
+    errors = simulation.errors
     return JsonResponse(
-        dict(areResultReady=are_result_ready),
+        dict(areResultReady=are_result_ready, errors=errors),
         status=200,
         content_type="application/json",
     )

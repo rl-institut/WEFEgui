@@ -5,10 +5,15 @@ from projects.scenario_topology_helpers import assign_assets, assign_busses
 from wefe.survey import SURVEY_QUESTIONS_CATEGORIES
 import json
 
+
+WEATHER_DATA_APP = "weather_data"
+WEFE_DEMAND_APP = "wefedemand"
+WEFE_SIM_APP = "wefesim"
+
 WEFEAPP_CHOICES = (
-    ("weather_data", "Weather Data API"),
-    ("wefedemand", "WEFEDemand API"),
-    ("sim_server", "WEFE Simulation Server"),
+    (WEATHER_DATA_APP, "Weather Data API"),
+    (WEFE_DEMAND_APP, "WEFEDemand API"),
+    (WEFE_SIM_APP, "WEFE Simulation Server"),
 )
 # class Options(models.Model):
 #     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
@@ -59,7 +64,14 @@ class SurveyAnswer(models.Model):
         if ignore_empty is True and self.value is None:
             answer = {}
         else:
-            value = json.loads(self.value) if self.value is not None else None
+            if self.value:
+                try:
+                    value = json.loads(self.value)
+                except json.JSONDecodeError:
+                    # value is already a regular string
+                    value = self.value
+            else:
+                value = None
             answer = {self.question.question_id: value}
         return answer
 

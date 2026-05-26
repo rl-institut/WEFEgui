@@ -113,56 +113,10 @@ def create_or_delete_simulation_scheduler(**kwargs):
 
 
 def send_feedback_email(subject, body):
-
-    # smtp_server = config.MAIL_HOST
-    # smtp_port = config.MAIL_PORT
-    # smtp_username = config.MAIL_ADDRESS
-    # smtp_password = config.MAIL_PW
-    # message = MIMEMultipart()
-    # message["From"] = config.HEADER_ADDRESS
-    # message["To"] = to_address if '@' in to_address else config.MAIL_ADDRESS_LOGGER
-    # message["Subject"] = subject
-    # message.attach(MIMEText(msg, "plain"))
-    # with smtplib.SMTP(smtp_server, smtp_port) as server:
-    #     server.starttls()
-    #     try:
-    #         server.login(smtp_username, smtp_password)
-    #         server.sendmail(config.MAIL_ADDRESS, message["To"], message.as_string())
-    #     except smtplib.SMTPAuthenticationError as e:
-    #         print('\n{}\n{}'.format(e, config.MAIL_ADDRESS.replace('@', '')))
-    #         warnings.warn(str(e), category=UserWarning)
-
-    pass
-    # tz = EWSTimeZone(TIME_ZONE)
-    # try:
-    #     credentials = Credentials(EXCHANGE_ACCOUNT, EXCHANGE_PW)
-    #
-    #     config = Configuration(server=EXCHANGE_SERVER, credentials=credentials)
-    #
-    #     account = Account(
-    #         EXCHANGE_EMAIL,
-    #         credentials=credentials,
-    #         autodiscover=False,
-    #         default_timezone=tz,
-    #         config=config,
-    #     )
-    #     recipients = [Mailbox(email_address=recipient) for recipient in RECIPIENTS]
-    #     mail = Message(
-    #         account=account,
-    #         folder=account.sent,
-    #         subject=EMAIL_SUBJECT_PREFIX + subject,
-    #         body=body,
-    #         to_recipients=recipients,
-    #     )
-    #     mail.send_and_save()
-    # except Exception as ex:
-    #     logger.warning(
-    #         f"Couldn't send feedback email. Exception raised: {traceback.format_exc()}."
-    #     )
-    #     raise ex
+    send_email(RECIPIENTS, subject, body)
 
 
-def send_email(*, to_email, subject, message):
+def send_email(to_email, subject, message):
     """Send E-mail via MS Exchange Server using credentials from env vars
     Parameters
     ----------
@@ -178,69 +132,49 @@ def send_email(*, to_email, subject, message):
         Success status (True: successful)
     """
     prefixed_subject = EMAIL_SUBJECT_PREFIX + subject
+    if isinstance(to_email, str):
+        to_email = [to_email]
 
-    # if USE_EXCHANGE_EMAIL_BACKEND is True:
-    #
-    #     tz = EWSTimeZone(TIME_ZONE)
-    #     credentials = Credentials(EXCHANGE_ACCOUNT, EXCHANGE_PW)
-    #     config = Configuration(server=EXCHANGE_SERVER, credentials=credentials)
-    #
-    #     try:
-    #         account = Account(
-    #             EXCHANGE_EMAIL,
-    #             credentials=credentials,
-    #             autodiscover=False,
-    #             default_timezone=tz,
-    #             config=config,
-    #         )
-    #     except ConnectionError as err:
-    #         err_msg = _("Form - connection error:") + f" {err}"
-    #         logger.error(err_msg)
-    #         return False
-    #     except Exception as err:  # pylint: disable=broad-except
-    #         err_msg = _("Form - other error:") + f" {err}"
-    #         logger.error(err_msg)
-    #         return False
-    #
-    #     recipients = [Mailbox(email_address=to_email)]
-    #
-    #     msg = Message(
-    #         account=account,
-    #         folder=account.sent,
-    #         subject=prefixed_subject,
-    #         body=message,
-    #         to_recipients=recipients,
-    #     )
-    #
-    #     try:
-    #         msg.send_and_save()
-    #         return True
-    #     except Exception as err:  # pylint: disable=broad-except
-    #         err_msg = _("Form - mail sending error:") + f" {err}"
-    #         logger.error(err_msg)
-    #         return False
-    # elif USE_EXCHANGE_EMAIL_BACKEND is False:
-    #     print(
-    #         "\n",
-    #         "--- No email is send ---",
-    #         "\n\n",
-    #         "To:",
-    #         to_email,
-    #         "\n\n",
-    #         "Subject:",
-    #         prefixed_subject,
-    #         "\n\n",
-    #         "Message:",
-    #         message,
-    #         "\n",
-    #     )
-    #     return True
-    # else:
-    #     raise ValueError(
-    #         "Email backend not configured.",
-    #         "USE_EXCHANGE_EMAIL_BACKEND must be boolean of either True or False.",
-    #     )
-    #     return False
+    if USE_EXCHANGE_EMAIL_BACKEND is True:
+        _message = MIMEMultipart()
+        _message["From"] = EXCHANGE_EMAIL
+        _message["To"] = ",".join(to_email)
+        _message["Subject"] = prefixed_subject
+        _message.attach(MIMEText(message, "plain"))
+        with smtplib.SMTP(EXCHANGE_SERVER, 587) as server:
+            server.starttls()
+            try:
+                server.login(EXCHANGE_EMAIL, EXCHANGE_PW)
+                server.sendmail(EXCHANGE_EMAIL, to_email, _message.as_string())
+                return True
+            except smtplib.SMTPAuthenticationError as e:
+                err_msg = _("Form - mail sending error:") + f" {e}" + f", {EXCHANGE_EMAIL.replace('@', '')}"
+                logger.error(err_msg)
+                warnings.warn(str(e), category=UserWarning)
+                return False
+
+    elif USE_EXCHANGE_EMAIL_BACKEND is False:
+        print(
+            "\n",
+            "--- No email is send ---",
+            "\n\n",
+            "To:",
+            to_email,
+            "\n\n",
+            "Subject:",
+            prefixed_subject,
+            "\n\n",
+            "Message:",
+            message,
+            "\n",
+        )
+        return True
+    else:
+        raise ValueError(
+            "Email backend not configured.",
+            "USE_EXCHANGE_EMAIL_BACKEND must be boolean of either True or False.",
+        )
+        return False
 
 
 def excuses_design_under_development(request, link=False):
@@ -286,7 +220,7 @@ class RenewablesNinja:
             "capacity": 1.0,
             "system_loss": 0.1,
             "tracking": 0,
-            "tilt": coordinates["lat"],
+            "tilt": 35,
             "azim": 180,
             "format": "json",
             "raw": "true",

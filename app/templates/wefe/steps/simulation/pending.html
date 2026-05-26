@@ -15,7 +15,7 @@
         <div class="simulation__content">
           <h2>{% translate "Simulation pending" %}</h2>
           <div class="simulation__id">
-            <a href="{{ MVS_GET_URL }}{{ mvs_token }}">{{ mvs_token }}</a>
+            <a href="{{ WEFESIM_GET_URL }}{{ mvs_token }}">{{ mvs_token }}</a>
           </div>
           <div class="simulation__feedback">
             <div class="item item--successful">
@@ -43,7 +43,7 @@
 {% block end_body_scripts %}
 {% if simulation_status == "PENDING" %}
 <script>
-    const checkSimulationUrl = `{% url 'fetch_simulation_results' sim_id %}`;
+    const checkSimulationUrl = `{% url 'fetch_wefe_simulation_results' sim_id %}`;
 </script>
 <script src="{% static 'js/simulation_requests.js' %}"></script>
 {% endif %}

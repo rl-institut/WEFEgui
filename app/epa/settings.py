@@ -40,6 +40,9 @@ STATIC_ROOT = BASE_DIR / "cdn_static_root"
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+    "django_plotly_dash.finders.DashAssetFinder",
+    "django_plotly_dash.finders.DashComponentFinder",
+    "django_plotly_dash.finders.DashAppDirectoryFinder",
 ]
 
 if DEBUG is True:
@@ -77,6 +80,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "django_q",
+    "django_plotly_dash.apps.DjangoPlotlyDashConfig",
 ]
 
 if DEBUG is True:
@@ -86,6 +90,8 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django_plotly_dash.middleware.BaseMiddleware",
+    "django_plotly_dash.middleware.ExternalRedirectionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -155,7 +161,7 @@ LANGUAGE_CODE = "en"
 
 LOCALE_PATHS = (BASE_DIR / "locale",)
 
-LANGUAGES = [("de", "German"), ("en", "English")]
+LANGUAGES = [("en", "English")]
 
 TIME_ZONE = "Europe/Copenhagen"
 
@@ -186,7 +192,7 @@ EXCHANGE_EMAIL = env("EXCHANGE_EMAIL", default="dummy@dummy.com")
 EXCHANGE_SERVER = env("EXCHANGE_SERVER", default="dummy.com")
 # Email addresses to which feedback emails will be sent
 RECIPIENTS = env.list("RECIPIENTS", default=["dummy@dummy.com", "dummy2@dummy.com"])
-EMAIL_SUBJECT_PREFIX = env("EMAIL_SUBJECT_PREFIX", default="[open_plan] ")
+EMAIL_SUBJECT_PREFIX = env("EMAIL_SUBJECT_PREFIX", default="[wefe_plan] ")
 
 MESSAGE_TAGS = {
     messages.DEBUG: "alert-info",
@@ -239,11 +245,12 @@ WEFEDEMAND_GET_URL = f"{WEFEDEMAND_API_HOST}/check/"
 
 # WEFESIM API
 WEFESIM_API_HOST = env("WEFESIM_API", default=None)
-WEFESIM_POST_URL = f"{WEFESIM_API_HOST}/sendjson/prod"
+WEFESIM_POST_URL = f"{WEFESIM_API_HOST}/sendjson/"
 WEFESIM_GET_URL = f"{WEFESIM_API_HOST}/check/"
 
 # WEFEConfigurator settings
-COMPONENT_TEMPLATES_PATH = str(BASE_DIR / "static" / "wefe_configurator/component_library/WIP_components")
+COMPONENT_TEMPLATES_PATH = str(BASE_DIR / "static" / "wefe_configurator" / "component_library" / "components")
+COMPONENT_HELPERS_PATH = str(BASE_DIR / "static" / "wefe_configurator" / "component_library" / "helpers")
 
 LOGGING = {
     "version": 1,
@@ -293,3 +300,14 @@ Q_CLUSTER = {
     "queue_limit": 50,
     "orm": "default",
 }
+
+# django-plotly-dash settings
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
+PLOTLY_COMPONENTS = [
+    # Common components (ie within dash itself) are automatically added
+    # django-plotly-dash components
+    "dpd_components",
+    # Other components, as needed
+    "dash_bootstrap_components",
+]

@@ -27,8 +27,9 @@ SURVEY_QUESTIONS_CATEGORIES = {
     WATER_CATEGORY: _("Water"),
 }
 
+
 def set_qestion_suffix(q_id, suffix):
-    """ Format question when suffix is used
+    """Format question when suffix is used
 
     :param q_id: question ID
     :param suffix: suffix to prepend
@@ -37,9 +38,9 @@ def set_qestion_suffix(q_id, suffix):
     tot = q_id.split(".")
     main_id = tot[0]
     if len(tot) >= 2:
-        rest=tot[1:]
+        rest = tot[1:]
 
-        answer = main_id + suffix + "."+ ".".join(rest)
+        answer = main_id + suffix + "." + ".".join(rest)
     else:
         answer = main_id + suffix
     return answer
@@ -141,10 +142,7 @@ def generate_matrix_questions(survey_questions, text_to_replace):
     extra_questions = {}
     extra_questions_size = {}
     for qi, q in enumerate(survey_questions):
-        if (
-            q.get("display_type", "") == "multiple_choice_tickbox"
-            and "subquestion" in q
-        ):
+        if q.get("display_type", "") == "multiple_choice_tickbox" and "subquestion" in q:
             extra_number = 0
             sq = q["subquestion"]
             # get the list of question's answers which share the same link to a subquestion
@@ -157,17 +155,15 @@ def generate_matrix_questions(survey_questions, text_to_replace):
                     extra_questions[ssq_id] = []
                     for suffix, supra_answer in enumerate(shared_subquestions[ssq_id]):
                         temp = copy.deepcopy(ssq)
-                        temp["question"] = temp["question"].replace(
-                            text_to_replace, supra_answer
-                        )
+                        temp["question"] = temp["question"].replace(text_to_replace, supra_answer)
                         temp["question_id"] = ssq_id + "." + str(suffix)
                         # Replace the subquestion id in the supraquestion subquestions
                         if isinstance(q["subquestion"][supra_answer], str):
                             q["subquestion"][supra_answer] = temp["question_id"]
                         else:
-                            q["subquestion"][supra_answer][
-                                q["subquestion"][supra_answer].index(ssq_id)
-                            ] = temp["question_id"]
+                            q["subquestion"][supra_answer][q["subquestion"][supra_answer].index(ssq_id)] = temp[
+                                "question_id"
+                            ]
                         extra_questions[ssq_id].append(temp)
                     # update the number of extra questions
                     extra_number += len(extra_questions[ssq_id])
@@ -178,28 +174,16 @@ def generate_matrix_questions(survey_questions, text_to_replace):
         # find the original question index in the survey questions
         q_idx = get_survey_question_index(survey_questions, q_id)
         # insert the matrix subquestions
-        survey_questions = (
-            survey_questions[: q_idx + 1]
-            + extra_questions[q_id]
-            + survey_questions[q_idx + 1 :]
-        )
+        survey_questions = survey_questions[: q_idx + 1] + extra_questions[q_id] + survey_questions[q_idx + 1 :]
         # remove the original question from the survey questions
         survey_questions.pop(q_idx)
 
     # sort the matrix questions by rows instead of by columns (only for display purposes)
     for q_id in extra_questions_size:
-        q_idx = survey_questions.index(
-            get_survey_question_by_id(survey_questions, q_id)
-        )
-        col_sorted_questions = survey_questions[
-            q_idx + 1 : q_idx + 1 + extra_questions_size[q_id]
-        ]
-        row_sorted_questions = sorted(
-            col_sorted_questions, key=functools.cmp_to_key(compare_matrix_questions)
-        )
-        survey_questions[q_idx + 1 : q_idx + 1 + extra_questions_size[q_id]] = (
-            row_sorted_questions
-        )
+        q_idx = survey_questions.index(get_survey_question_by_id(survey_questions, q_id))
+        col_sorted_questions = survey_questions[q_idx + 1 : q_idx + 1 + extra_questions_size[q_id]]
+        row_sorted_questions = sorted(col_sorted_questions, key=functools.cmp_to_key(compare_matrix_questions))
+        survey_questions[q_idx + 1 : q_idx + 1 + extra_questions_size[q_id]] = row_sorted_questions
 
     return survey_questions
 
@@ -219,6 +203,7 @@ COMPONENT_SURVEY_STRUCTURE = [
             "biogas plant",
             "other",
         ],
+        INFOBOX: "Please select at least one electricity source. 'Other' cannot be selected alone.",
         "answer_map_to": TYPE_COMPONENT,
         "display_type": "multiple_choice_tickbox",
         "subquestion": {
@@ -253,21 +238,22 @@ COMPONENT_SURVEY_STRUCTURE = [
         "answer_map_to": TYPE_COMPONENT_ATTRIBUTE,
     },
     {
-        "question": "What ist the capacity [kW] of the installed wind power systems?",
+        "question": "What is the capacity [kW] of the installed wind power systems?",
         "question_id": "1.4",
         "variable_name": "capacity",
         "possible_answers": TYPE_FLOAT,
         "answer_map_to": TYPE_COMPONENT_ATTRIBUTE,
     },
     {
-        "question": "What ist the capacity [kW] of the installed hydropower systems?",
+        "question": "What is the capacity [kW] of the installed hydropower systems?",
         "question_id": "1.5",
         "variable_name": "capacity",
         "possible_answers": TYPE_FLOAT,
         "answer_map_to": TYPE_COMPONENT_ATTRIBUTE,
+        INFOBOX: "Hydropower is non-expandable and will not be optimized. Only existing capacity will be considered.",
     },
     {
-        "question": "What ist the capacity [kW] of the installed biogas plant??",
+        "question": "What is the capacity [kW] of the installed biogas plant?",
         "question_id": "1.6",
         "variable_name": "capacity",
         "possible_answers": TYPE_FLOAT,
@@ -327,7 +313,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
         text_to_replace="TYPE_WATER_SUPPLY",
         survey_questions_template=[
             {
-                "question": "Which water source do you use for TYPE_WATER_SUPPLY",
+                "question": "Which water source do you use for TYPE_WATER_SUPPLY?",
                 "question_id": "3",
                 "possible_answers": [
                     "groundwater well",
@@ -340,6 +326,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                     "bottled water",
                     "other",
                 ],
+                INFOBOX: "Please select at least one water source. 'Other' cannot be selected alone.",
                 "answer_map_to": TYPE_COMPONENT,
                 "display_type": "multiple_choice_tickbox",
                 "subquestion": {
@@ -352,10 +339,10 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                 },
             },
             {
-              "question": "What other TYPE_WATER_SUPPLY source(s) do you have(separate with a comma)?",
-              "question_id": "3.3",
-              "possible_answers": TYPE_STRING,
-              "answer_map_to": TYPE_OTHER,
+                "question": "What other TYPE_WATER_SUPPLY source(s) do you have(separate with a comma)?",
+                "question_id": "3.3",
+                "possible_answers": TYPE_STRING,
+                "answer_map_to": TYPE_OTHER,
             },
         ]
         + generate_generic_questions(
@@ -364,11 +351,12 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
             survey_questions_template=[
                 {
                     "question": "Are water pumps required to convey TYPE_WATER_SOURCE from the source to the point of consumption?",
+                    INFOBOX: "For simplification, we automatically assume that electric water pumps are used.",
                     "question_id": "3.1",
                     "possible_answers": ["Yes", "No"],
                     "answer_map_to": TYPE_COMPONENT,
                     "subquestion": {
-                        "Yes": ["3.1.1", "3.1.2", "3.1.4"],
+                        "Yes": ["3.1.1", "3.1.3", "3.1.4"],
                     },
                 },
                 {
@@ -376,30 +364,11 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                     " and the elevation of the location where you are using the water?",
                     INFOBOX: "Elevation of the water source refers to for example average elevation of the groundwater level,"
                     " lake surface, or the elevation of the location of river water uptake. We require this information"
-                    "to obtain information regarding a potential water pump head",
+                    " to obtain information regarding a potential water pump head.",
                     "question_id": "3.1.1",
                     "variable_name": "head",
                     "answer_map_to": TYPE_COMPONENT_ATTRIBUTE,
                     "possible_answers": TYPE_FLOAT,
-                },
-                {
-                    "question": "Which energy source is the pump using?",
-                    "question_id": "3.1.2",
-                    "display_type": "multiple_choice_tickbox",
-                    "possible_answers": [
-                        "manual",
-                        "diesel",
-                        "electricity (grid)",
-                        "wind turbine",
-                        "photovoltaics",
-                    ],
-                    "answer_map_to": TYPE_COMPONENT,
-                    "subquestion": {
-                        "diesel": ["3.1.3"],
-                        "electricity (grid)": ["3.1.3"],
-                        "wind turbine": ["3.1.3"],
-                        "photovoltaics": ["3.1.3"],
-                    },
                 },
                 {
                     "question": "What is the rated power of the water pump?",
@@ -407,6 +376,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                     "variable_name": "capacity",
                     "possible_answers": TYPE_FLOAT,
                     "answer_map_to": TYPE_COMPONENT_ATTRIBUTE,
+                    INFOBOX: "Will only be used to calculate the throughput. If the throughput is given, this parameter will be ignored.",
                 },
                 {
                     "question": "What is the maximum throughput [m³/h] of the water pump",
@@ -427,6 +397,15 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                         "sediments and turbidity",
                         "nitrates and nitrites",
                     ],
+                    INFOBOX: "Natural water sources typically contain impurities that require treatment."
+                    " Please select at least one water quality issue present at your site to configure"
+                    " an appropriate treatment."
+                    " Note: (1) Fecal Contamination additionally requires any one of Salinity, Heavy Metals, or"
+                    " Chemical Contamination to be selected."
+                    " (2) Hardness additionally requires Salinity to be selected."
+                    " (3) Sediments & Turbidity additionally requires any one of Salinity, Heavy Metals, or"
+                    " Chemical Contamination to be selected."
+                    " (4) Nitrates & Nitrites additionally requires Chemical Contamination (Fertilizers) to be selected.",
                     "display_type": "multiple_choice_tickbox",
                     "subquestion": {
                         "salinity": "4.1",
@@ -440,6 +419,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                     "variable_name": "salinity",
                     "possible_answers": TYPE_FLOAT,
                     "answer_map_to": TYPE_COMPONENT_ATTRIBUTE,
+                    INFOBOX: "Please enter a Salinity value greater than 0.",
                 },
                 {
                     "question": "Which heavy metals are prevalent in your TYPE_WATER_SOURCE?",
@@ -452,6 +432,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                         "Cadmium",
                         "Iron",
                     ],
+                    INFOBOX: "Please select at least one heavy metal.",
                     "display_type": "multiple_choice_tickbox",
                     "answer_map_to": TYPE_COMPONENT,
                 },
@@ -464,6 +445,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                         "pharmaceutical_residues",
                         "fertilizers",
                     ],
+                    INFOBOX: "Please select at least one chemical contaminant.",
                     "answer_map_to": TYPE_COMPONENT,
                     "display_type": "multiple_choice_tickbox",
                 },
@@ -482,34 +464,37 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                             "boiling",
                             "distillation",
                             "activated carbon filter",
-                            "UV-disinfection",
+                            "uv-disinfection",
                             "cartridge filter",
                             "microfiltration",
                             "ceramic filter",
                             "nanofiltration",
-                            "electrodialyis",
+                            "electrodialysis",
                             "slow sand filter",
                             "water softener",
                             "chlorination",
                             "other",
                         ],
+                        INFOBOX: "Please select either 'no' or at least one treatment technology."
+                        " 'Other' cannot be selected alone.",
                         "answer_map_to": TYPE_COMPONENT,
                         "display_type": "multiple_choice_tickbox",
                         "subquestion": {
                             "reverse osmosis": ["5.1", "5.2", "5.3"],
                             "membrane distillation": ["5.1", "5.2", "5.3"],
                             "ultrafiltration": ["5.1", "5.2", "5.3"],
-                            "boiling": ["5.2", "5.3"],
+                            "boiling": ["5.1", "5.2", "5.3"],
                             "distillation": ["5.2", "5.3"],
                             "activated carbon filter": ["5.2", "5.3"],
-                            "UV-disinfection": ["5.2", "5.3"],
+                            "uv-disinfection": ["5.2", "5.3"],
                             "cartridge filter": ["5.2", "5.3"],
                             "microfiltration": ["5.2", "5.3"],
                             "ceramic filter": ["5.2", "5.3"],
                             "nanofiltration": ["5.2", "5.3"],
-                            "electrodialyis": ["5.2", "5.3"],
+                            "electrodialysis": ["5.2", "5.3"],
                             "slow sand filter": ["5.2", "5.3"],
                             "water softener": ["5.2", "5.3"],
+                            "chlorination": ["5.2", "5.3"],
                             "other": ["5.4", "5.1", "5.2", "5.3"],
                         },
                     },
@@ -552,6 +537,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                 "question_id": "6",
                 "possible_answers": ["Yes", "No"],
                 "answer_map_to": TYPE_COMPONENT,
+                INFOBOX: "Currently not implemented in the simulation.",
             },
         ],
     )
@@ -569,6 +555,7 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                     "disposal to environment without treatment",
                     "other",
                 ],
+                INFOBOX: "Please select at least one treatment technology. 'Other' cannot be selected alone.",
                 "answer_map_to": TYPE_COMPONENT,
                 "display_type": "multiple_choice_tickbox",
                 "subquestion": {
@@ -606,13 +593,13 @@ WATER_SUPPLY_SURVEY_STRUCTURE = (
                     "composting toilet",
                     "open field",
                 ],
+                INFOBOX: "Please select at least one toilet type.",
                 "answer_map_to": TYPE_COMPONENT,
             },
         ],
         text_to_replace="WWT_TYPE",
     )
 )
-
 
 
 CROPS_SURVEY_STRUCTURE = (
@@ -623,6 +610,7 @@ CROPS_SURVEY_STRUCTURE = (
             "question_id": "8",
             "possible_answers": ["Yes", "No"],
             "subquestion": {"Yes": ["11", "9", "10"]},
+            INFOBOX: "Currently not implemented in the simulation.",
         }
     ]
     + generate_matrix_questions(
@@ -779,108 +767,112 @@ CROPS_SURVEY_STRUCTURE = (
         },
     ]
 )
-IRRIGATION_TYPE_SURVEY = [
+IRRIGATION_TYPE_SURVEY = (
+    [
         {
             "question": "Are you irrigating your CROP_TYPE cultivation?",
             "question_id": "9",
             "possible_answers": ["yes", "no"],
             "subquestion": {"yes": ["9.1", "9.2"]},
-        },]  + generate_matrix_questions(
+        },
+    ]
+    + generate_matrix_questions(
         survey_questions=[
-        {
-            "question": "Please indicate the irrigation technologies you are using",
-            "question_id": "9.1",
-            "possible_answers": [
-                "surface irrigation",
-                "center-pivot irrigation",
-                "irrigation sprinkler",
-                "subsurface drip irrigation",
-                "drip irrigation",
-                "furrow irrigation",
-                "basin irrigation",
-                "border irrigation",
-                "watering can",
-                "smart irrigation system",
-                "other",
-            ],
-            "display_type": "multiple_choice_tickbox",
-            # TODO: map all ticked answers to IRRIGATION TYPE and repeat the following questions for all of them
-            "subquestion": {
-                "other": ["9.2", "9.3", "9.4"],
-                "surface irrigation": ["9.3", "9.4"],
-                "center-pivot irrigation": ["9.3", "9.4"],
-                "irrigation sprinkler": ["9.3", "9.4"],
-                "subsurface drip irrigation": ["9.3", "9.4"],
-                "drip irrigation": ["9.3", "9.4"],
-                "furrow irrigation": ["9.3", "9.4"],
-                "basin irrigation": ["9.3", "9.4"],
-                "border irrigation": ["9.3", "9.4"],
-                "watering can": ["9.3", "9.4"],
-                "smart irrigation system": ["9.3", "9.4"],
+            {
+                "question": "Please indicate the irrigation technologies you are using",
+                "question_id": "9.1",
+                "possible_answers": [
+                    "surface irrigation",
+                    "center-pivot irrigation",
+                    "irrigation sprinkler",
+                    "subsurface drip irrigation",
+                    "drip irrigation",
+                    "furrow irrigation",
+                    "basin irrigation",
+                    "border irrigation",
+                    "watering can",
+                    "smart irrigation system",
+                    "other",
+                ],
+                "display_type": "multiple_choice_tickbox",
+                # TODO: map all ticked answers to IRRIGATION TYPE and repeat the following questions for all of them
+                "subquestion": {
+                    "other": ["9.2", "9.3", "9.4"],
+                    "surface irrigation": ["9.3", "9.4"],
+                    "center-pivot irrigation": ["9.3", "9.4"],
+                    "irrigation sprinkler": ["9.3", "9.4"],
+                    "subsurface drip irrigation": ["9.3", "9.4"],
+                    "drip irrigation": ["9.3", "9.4"],
+                    "furrow irrigation": ["9.3", "9.4"],
+                    "basin irrigation": ["9.3", "9.4"],
+                    "border irrigation": ["9.3", "9.4"],
+                    "watering can": ["9.3", "9.4"],
+                    "smart irrigation system": ["9.3", "9.4"],
+                },
             },
-        },
+            {
+                "question": "What is the maximum flow rate [m³/h] of the IRRIGATION_TYPE system that you have in place?",
+                "question_id": "9.3",
+                "possible_answers": TYPE_FLOAT,
+                "display_type": "matrix",
+            },
+            {
+                "question": "For which crop types are you using this irrigation technology?",
+                "question_id": "9.4",
+                "display_type": "matrix",
+                "possible_answers": [  # TODO ideally reduce options to CROP_TYPE which have been ticked in question 8.1
+                    "wheat",
+                    "rice",
+                    "soy bean",
+                    "dry bean",
+                    "peanut",
+                    "potato",
+                    "cassava",
+                    "tomato",
+                    "sweetcorn",
+                    "green bean",
+                    "carrot",
+                    "cotton",
+                    "banana",
+                    "lettuce",
+                    "cucumber",
+                    "pineapple",
+                    "avocado",
+                    "quinoa",
+                    "amaranth",
+                    "guava",
+                    "papaya",
+                    "mango",
+                    "sorghum",
+                    "millet",
+                    "yam",
+                    "plantain",
+                    "apple",
+                    "sunflower",
+                    "cacao",
+                    "cashew",
+                    "pumpkin",
+                    "black bean",
+                    "oat",
+                    "pepper",
+                    "other",
+                ],
+            },
+        ],
+        text_to_replace="CROP_TYPE",
+    )
+    + [
         {
-            "question": "What is the maximum flow rate [m³/h] of the IRRIGATION_TYPE system that you have in place?",
-            "question_id": "9.3",
-            "possible_answers": TYPE_FLOAT,
-            "display_type": "matrix",
+            "question": "What is the other irrigation technology you are using?",
+            "question_id": "9.2",
+            "possible_answers": TYPE_STRING,
         },
-        {
-            "question": "For which crop types are you using this irrigation technology?",
-            "question_id": "9.4",
-            "display_type": "matrix",
-            "possible_answers": [  # TODO ideally reduce options to CROP_TYPE which have been ticked in question 8.1
-                "wheat",
-                "rice",
-                "soy bean",
-                "dry bean",
-                "peanut",
-                "potato",
-                "cassava",
-                "tomato",
-                "sweetcorn",
-                "green bean",
-                "carrot",
-                "cotton",
-                "banana",
-                "lettuce",
-                "cucumber",
-                "pineapple",
-                "avocado",
-                "quinoa",
-                "amaranth",
-                "guava",
-                "papaya",
-                "mango",
-                "sorghum",
-                "millet",
-                "yam",
-                "plantain",
-                "apple",
-                "sunflower",
-                "cacao",
-                "cashew",
-                "pumpkin",
-                "black bean",
-                "oat",
-                "pepper",
-                "other",
-            ],
-        },
-    ],
-    text_to_replace="CROP_TYPE",
-
-) + [
-    {
-        "question": "What is the other irrigation technology you are using?",
-        "question_id": "9.2",
-        "possible_answers": TYPE_STRING,
-    },
-]
+    ]
+)
 
 
 SURVEY_STRUCTURE = (
-    COMPONENT_SURVEY_STRUCTURE +  CROPS_SURVEY_STRUCTURE + WATER_SUPPLY_SURVEY_STRUCTURE #+ IRRIGATION_TYPE_SURVEY
+    COMPONENT_SURVEY_STRUCTURE + CROPS_SURVEY_STRUCTURE + WATER_SUPPLY_SURVEY_STRUCTURE  # + IRRIGATION_TYPE_SURVEY
 )
 
 
@@ -930,7 +922,8 @@ def collect_subquestion_mapping():
                             subquestion_mapping[subq] = [question["question_id"], ""]
                         else:
                             print("problem with subquestion", subq)
-                            import pdb;
+                            import pdb
+
                             pdb.set_trace()
 
     return subquestion_mapping
@@ -950,9 +943,7 @@ def check_subquestions_keys():
 def check_questions_format():
     for i, question in enumerate(SURVEY_STRUCTURE):
         if "question_id" not in question:
-            print(
-                f"{i}th question of the survey does not have the mandatory field 'question_id'"
-            )
+            print(f"{i}th question of the survey does not have the mandatory field 'question_id'")
 
 
 SUB_QUESTION_MAPPING = collect_subquestion_mapping()
@@ -960,6 +951,7 @@ SUB_QUESTION_MAPPING = collect_subquestion_mapping()
 # import json
 # with open("sub_question_mapping.json", "w") as fp:
 #     json.dump(SUB_QUESTION_MAPPING, fp, indent=4)
+
 
 def map_subquestions():
     """

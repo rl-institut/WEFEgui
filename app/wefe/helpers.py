@@ -1,4 +1,7 @@
 import json
+from datetime import datetime
+from pathlib import Path
+
 import numpy as np
 import requests
 from django.contrib.staticfiles.storage import staticfiles_storage
@@ -14,8 +17,22 @@ import tableschema
 
 logger = logging.getLogger(__name__)
 
-from epa.settings import KOBO_API_TOKEN, KOBO_API_URL, WEATHER_DATA_API_HOST, COMPONENT_TEMPLATES_PATH
+from epa.settings import (
+    KOBO_API_TOKEN,
+    KOBO_API_URL,
+    WEATHER_DATA_API_HOST,
+    COMPONENT_TEMPLATES_PATH,
+    COMPONENT_HELPERS_PATH,
+)
 from projects.models import Project, Timeseries
+
+
+def convert_csvs_to_parquet(path=COMPONENT_HELPERS_PATH):
+    for csv_path in Path(path).glob("*.csv"):
+        parquet_path = csv_path.with_suffix(".parquet")
+        df = pd.read_csv(csv_path)
+        df.to_parquet(parquet_path, compression="snappy")
+        print(f"Converted {csv_path} to {parquet_path}")
 
 
 def help_icon(help_text=""):
@@ -83,7 +100,7 @@ def get_renewables_output(proj_id, raw=True):
 
 
 class KoboHandler:
-    base_survey_id = "aUTPpjLwttttNPF2tJgLKM"
+    base_survey_id = "aKHX8DMDaQ6VAHuBzgSwCZ"
     request_headers = {"Accept": "application/json", "Authorization": "Token " + str(KOBO_API_TOKEN)}
 
     def __init__(self, project):
@@ -99,8 +116,51 @@ class KoboHandler:
         # self.assign_permissions("view_asset", "AnonymousUser")
         # self.project_survey_url = self.deploy_form()
 
-    def request_data(self, survey_id):
-        pass
+    def request_data(self, survey_id=None):
+        if survey_id is None:
+            survey_id = self.project_survey_id
+
+        response = requests.get(f"{KOBO_API_URL}/assets/{survey_id}/data", headers=self.request_headers, timeout=60)
+
+        return response.json()
+
+    def get_data_summary(self, survey_id=None):
+        if survey_id is None:
+            survey_id = self.project_survey_id
+
+        kobo_json = self.request_data(survey_id)
+
+        fields = [
+            "respondent_local_aut",
+            "respondent_service",
+            "respondent_large_scale_farm",
+            "respondent_business",
+        ]
+
+        counts = {field: 0 for field in fields} | {"respondent_unknown": 0}
+        nr_responses = kobo_json.get("count")
+        if nr_responses == 0:
+            return counts
+        else:
+            for record in kobo_json.get("results", []):
+                for field in fields:
+                    key = f"G_0/{field}"
+                    try:
+                        if record.get(key) == "yes":
+                            counts[field] += 1
+                    except KeyError:
+                        counts["respondent_unknown"] += 1
+
+            counts["respondent_household"] = (
+                nr_responses
+                - counts["respondent_local_aut"]
+                - counts["respondent_service"]
+                - counts["respondent_large_scale_farm"]
+                - counts["respondent_business"]
+                - counts["respondent_unknown"]
+            )
+
+        return counts
 
     def get_survey_metadata(self, survey_id=None):
         # TODO might be useful depending on how we need the surveys and what we save about them
@@ -248,14 +308,101 @@ def process_wefedemand_response(simulation, wefedemand_response):
     return
 
 
+def records_to_df(records):
+    """
+    Convert a list-of-records back to a DataFrame.
+    Restores index if it was serialized via reset_index().
+    """
+    if not records:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(records)
+
+    # restore common index patterns
+    if "index" in df.columns:
+        df = df.set_index("index")
+
+    # restore named index
+    if "kpi" in df.columns and df.columns.tolist() == ["kpi", "value"]:
+        df = df.set_index("kpi")
+
+    return df
+
+
+def df_from_split_multiindex(payload, index_names=None):
+    obj = json.loads(payload) if isinstance(payload, str) else payload
+
+    # index
+    idx = obj["index"]
+    index = pd.MultiIndex.from_tuples([tuple(r) for r in idx], names=index_names)
+
+    # columns
+    cols = obj["columns"]
+
+    # convert only datetime-like string columns to Timestamp labels
+    cols = pd.Index(cols)
+    datetimes = pd.to_datetime(cols, errors="coerce")  # parses ISO strings, leaves others as NaT
+    time_cols = datetimes.notna()
+
+    # keep original non-time labels; replace only time labels with Timestamps
+    fixed_cols = pd.Index([dt if is_time else col for col, dt, is_time in zip(cols, datetimes, time_cols)])
+
+    results_df = pd.DataFrame(obj["data"], index=index, columns=fixed_cols)
+
+    # TODO figure out why this timestep is included instead
+    results_df = results_df.drop(columns=[datetime(2023, 1, 1)])
+
+    return results_df
+
+
+def restore_dash_tables(json_data):
+    """
+    Reconstruct calculator.dash_tables from JSON object.
+    """
+    restored = {}
+
+    for section, content in json_data.items():
+
+        # e.g. result_tables, service_tables
+        if isinstance(content, dict):
+            restored[section] = {}
+
+            for name, value in content.items():
+                if isinstance(value, list):
+                    restored[section][name] = records_to_df(value)
+                else:
+                    # parameters_units or other plain dicts
+                    restored[section][name] = value
+        else:
+            restored[section] = content
+
+    return restored
+
+
+def process_wefesim_response(simulation, wefesim_response):
+    results = json.loads(wefesim_response)["results"]
+    simulation.results = wefesim_response
+    simulation.save()
+    # do not unpack tables here, as it is later done in the results view instead
+    # data = {"df_results": results["df_results"], "dash_tables": restore_dash_tables(results["dash_tables"])}
+    logger.info("The simulation results have been saved to the database")
+    return
+
+
 # Later direct imports without .json
 # TODO update this mapping with the latest produced survey_answer_component_mapping.json
-with staticfiles_storage.open("wefe_configurator/survey_helpers/survey_answer_component_mapping_in_use.json") as fp:
-    SURVEY_ANSWER_COMPONENT_MAPPING = json.load(fp)
+SURVEY_ANSWER_COMPONENT_MAPPING = {}
+SUB_QUESTION_MAPPING = {}
 
-with staticfiles_storage.open("wefe_configurator/survey_helpers/sub_question_mapping.json") as fp:
-    SUB_QUESTION_MAPPING = json.load(fp)
+if os.path.exists(
+    staticfiles_storage.path("wefe_configurator/survey_helpers/survey_answer_component_mapping_in_use.json")
+):
+    with staticfiles_storage.open("wefe_configurator/survey_helpers/survey_answer_component_mapping_in_use.json") as fp:
+        SURVEY_ANSWER_COMPONENT_MAPPING = json.load(fp)
 
+if os.path.exists(staticfiles_storage.path("wefe_configurator/survey_helpers/sub_question_mapping.json")):
+    with staticfiles_storage.open("wefe_configurator/survey_helpers/sub_question_mapping.json") as fp:
+        SUB_QUESTION_MAPPING = json.load(fp)
 
 
 def list_available_components():
@@ -402,6 +549,47 @@ WATER_TREATMENT_TRAIN = {
         ["slow_sand_filter", "ceramic_filter", "biofiltration"],  # both series/parallel possible # polishing
         ["uv_disinfection", "chlorination"],  # both series/parallel possible
         "activated_carbon_filter",  # polishing
+    ],
+    # Front-end treatment steps that prepare raw water for the main process.
+    # These units mainly remove coarse solids, grit, particles, and unstable feed characteristics
+    # so downstream treatment is protected from clogging, fouling, and performance loss.
+    "pre_treatment": [
+        "intake_structure",
+        "coarse_bar_screen",
+        "fine_screen",
+        "grit_chamber",
+        "cartridge_filter",
+        "simple_oxidation",
+        "coagulation_flocculation",
+    ],
+    # Main treatment steps that perform the primary water-quality transformation.
+    # These units are responsible for the core removal of dissolved contaminants, salts,
+    # pathogens, nutrients, organics, or other target pollutants.
+    "core_treatment": [
+        "slow_sand_filter",
+        "ceramic_filter",
+        "biofiltration",
+        "microfiltration",
+        "ultrafiltration",
+        "activated_carbon_filter",
+        "adsorption",
+        "ion_exchange",
+        "nanofiltration",
+        "electrodialysis",
+        "reverse_osmosis",
+        "membrane_distillation",
+        "distillation",
+        "boiling",
+        "photocatalysis",
+        "ozonation",
+        "biological_denitrification",
+    ],
+    # Final polishing and disinfection steps applied after the main treatment block.
+    # These units are used to ensure microbiological safety and improve final water quality
+    # before delivery to the drinking-water or service-water bus.
+    "post_treatment": [
+        "uv_disinfection",
+        "chlorination",
     ],
     "pollutant_trains": {
         "drinking_water": {

@@ -2326,26 +2326,28 @@
                 "groundwater"
             ],
             "public tap water": [
-                "tap-water"
+                "tap-water", "tap-water-pipe_DW"
             ],
             "desalinated seawater": [
-                "seawater",
-                "swro"
+                "seawater"
             ],
             "river/creek": [
-                "surface-water"
+                "river-water"
             ],
             "lake": [
-                "surface-water"
+                "lake-water"
             ],
             "water truck": [
-                "truck-water"
+                "truck-water", "truck-water-pipe_DW"
             ],
             "rainwater harvesting": [
-                ""
+                "rainwater-harvesting", "rain-water-pipe_DW"
             ],
             "bottled water": [
-                "bottled-water"
+                "bottled-water", "bottled-water-pipe_DW"
+            ],
+            "other": [
+                ""
             ]
         }
     },
@@ -2353,10 +2355,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "groundwater-pump"
             ],
             "No": [
-                ""
+                "groundwater-pipe"
             ]
         }
     },
@@ -2366,36 +2368,16 @@
             "head": "float"
         }
     },
-    "3_GW.1.2": {
-        "map_to": "component",
-        "map_answer": {
-            "manual": [
-                ""
-            ],
-            "diesel": [
-                ""
-            ],
-            "electricity (grid)": [
-                ""
-            ],
-            "wind turbine": [
-                ""
-            ],
-            "photovoltaics": [
-                ""
-            ]
-        }
-    },
     "3_GW.1.3": {
         "map_to": "attribute",
         "map_answer": {
-            "capacity": "float"
+            "power": "float"
         }
     },
     "3_GW.1.4": {
         "map_to": "attribute",
         "map_answer": {
-            "flow": "float"
+            "capacity": "float"
         }
     },
     "3.3": {
@@ -2649,7 +2631,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -2895,10 +2877,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "seawater-pump"
             ],
             "No": [
-                ""
+                "seawater-pipe"
             ]
         }
     },
@@ -2908,36 +2890,16 @@
             "head": "float"
         }
     },
-    "3_DS.1.2": {
-        "map_to": "component",
-        "map_answer": {
-            "manual": [
-                ""
-            ],
-            "diesel": [
-                ""
-            ],
-            "electricity (grid)": [
-                ""
-            ],
-            "wind turbine": [
-                ""
-            ],
-            "photovoltaics": [
-                ""
-            ]
-        }
-    },
     "3_DS.1.3": {
         "map_to": "attribute",
         "map_answer": {
-            "capacity": "float"
+            "power": "float"
         }
     },
     "3_DS.1.4": {
         "map_to": "attribute",
         "map_answer": {
-            "flow": "float"
+            "capacity": "float"
         }
     },
     "4_DS.1": {
@@ -3185,7 +3147,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -3431,10 +3393,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "river-water-pump"
             ],
             "No": [
-                ""
+                "river-water-pipe"
             ]
         }
     },
@@ -3444,36 +3406,16 @@
             "head": "float"
         }
     },
-    "3_RC.1.2": {
-        "map_to": "component",
-        "map_answer": {
-            "manual": [
-                ""
-            ],
-            "diesel": [
-                ""
-            ],
-            "electricity (grid)": [
-                ""
-            ],
-            "wind turbine": [
-                ""
-            ],
-            "photovoltaics": [
-                ""
-            ]
-        }
-    },
     "3_RC.1.3": {
         "map_to": "attribute",
         "map_answer": {
-            "capacity": "float"
+            "power": "float"
         }
     },
     "3_RC.1.4": {
         "map_to": "attribute",
         "map_answer": {
-            "flow": "float"
+            "capacity": "float"
         }
     },
     "4_RC.1": {
@@ -3721,7 +3663,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -3967,10 +3909,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "lake-water-pump"
             ],
             "No": [
-                ""
+                "lake-water-pipe"
             ]
         }
     },
@@ -3980,36 +3922,16 @@
             "head": "float"
         }
     },
-    "3_L.1.2": {
-        "map_to": "component",
-        "map_answer": {
-            "manual": [
-                ""
-            ],
-            "diesel": [
-                ""
-            ],
-            "electricity (grid)": [
-                ""
-            ],
-            "wind turbine": [
-                ""
-            ],
-            "photovoltaics": [
-                ""
-            ]
-        }
-    },
     "3_L.1.3": {
         "map_to": "attribute",
         "map_answer": {
-            "capacity": "float"
+            "power": "float"
         }
     },
     "3_L.1.4": {
         "map_to": "attribute",
         "map_answer": {
-            "flow": "float"
+            "capacity": "float"
         }
     },
     "4_L.1": {
@@ -4257,7 +4179,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -4518,25 +4440,25 @@
                 "groundwater"
             ],
             "public tap water": [
-                "tap_water"
+                "tap-water", "tap-water-pipe_DW"
             ],
             "desalinated seawater": [
-                "seawater", "desalinator"
+                "seawater"
             ],
             "river/creek": [
-                ""
+                "river-water"
             ],
             "lake": [
-                ""
+                "lake-water"
             ],
             "water truck": [
-                "truck_water"
+                "truck-water", "truck-water-pipe_DW"
             ],
             "rainwater harvesting": [
-                ""
+                "rainwater-harvesting", "rain-water-pipe_DW"
             ],
             "bottled water": [
-                "bottled_water"
+                "bottled-water", "bottled-water-pipe_DW"
             ],
             "other": [
                 ""
@@ -4547,10 +4469,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "groundwater-pump"
             ],
             "No": [
-                ""
+                "groundwater-pipe"
             ]
         }
     },
@@ -4837,7 +4759,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -5083,10 +5005,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "seawater-pump"
             ],
             "No": [
-                ""
+                "seawater-pipe"
             ]
         }
     },
@@ -5373,7 +5295,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -5619,10 +5541,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "river-water-pump"
             ],
             "No": [
-                ""
+                "river-water-pipe"
             ]
         }
     },
@@ -5909,7 +5831,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -6155,10 +6077,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "lake-water-pump"
             ],
             "No": [
-                ""
+                "lake-water-pipe"
             ]
         }
     },
@@ -6445,7 +6367,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -6706,25 +6628,25 @@
                 "groundwater"
             ],
             "public tap water": [
-                "tap_water"
+                "tap-water", "tap-water-pipe_SW"
             ],
             "desalinated seawater": [
-                "seawater", "desalinator"
+                "seawater"
             ],
             "river/creek": [
-                ""
+                "river-water"
             ],
             "lake": [
-                ""
+                "lake-water"
             ],
             "water truck": [
-                "truck_water"
+                "truck-water", "truck-water-pipe_SW"
             ],
             "rainwater harvesting": [
-                ""
+                "rainwater-harvesting", "rain-water-pipe_SW"
             ],
             "bottled water": [
-                "bottled_water"
+                "bottled-water", "bottled-water-pipe_SW"
             ],
             "other": [
                 ""
@@ -6735,10 +6657,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "groundwater-pump"
             ],
             "No": [
-                ""
+                "groundwater-pipe"
             ]
         }
     },
@@ -6952,7 +6874,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -7198,10 +7120,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "seawater-pump"
             ],
             "No": [
-                ""
+                "seawater-pipe"
             ]
         }
     },
@@ -7415,7 +7337,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -7661,10 +7583,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "river-water-pump"
             ],
             "No": [
-                ""
+                "river-water-pipe"
             ]
         }
     },
@@ -7878,7 +7800,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -8124,10 +8046,10 @@
         "map_to": "component",
         "map_answer": {
             "Yes": [
-                ""
+                "lake-water-pump"
             ],
             "No": [
-                ""
+                "lake-water-pipe"
             ]
         }
     },
@@ -8341,7 +8263,7 @@
             "activated carbon filter": [
                 ""
             ],
-            "UV-disinfection": [
+            "uv-disinfection": [
                 ""
             ],
             "cartridge filter": [
@@ -8665,11 +8587,49 @@
     "7.3": {
         "map_to": "component",
         "map_answer": {
-            "flush toilet": ["flush_toilet"],
-            "latrine": ["latrine"],
-            "dry toilet": ["dry_toilet"],
-            "composting toilet": ["composting_toilet"],
-            "open field": ["open_field"]
+            "flush toilet": [
+                "flush_toilet",
+                "hu_waste",
+                "hf_waste",
+                "excess-human-feces",
+                "excess-human-urine"
+            ],
+            "latrine": [
+                "latrine",
+                "hu_waste",
+                "hf_waste",
+                "excess-biomass",
+                "excess-human-feces",
+                "excess-human-urine"
+            ],
+            "dry toilet": [
+                "dry_toilet",
+                "hu_waste",
+                "hf_waste",
+                "excess-dry-feces",
+                "excess-human-feces",
+                "excess-human-urine"
+            ],
+            "composting toilet": [
+                "composting_toilet",
+                "hu_waste",
+                "hf_waste",
+                "excess-compost",
+                "excess-human-feces",
+                "excess-human-urine"
+            ],
+            "open field": [
+                "open_field",
+                "hu_waste",
+                "hf_waste",
+                "au_waste",
+                "af_waste",
+                "excess-biomass",
+                "excess-human-feces",
+                "excess-human-urine",
+                "excess-animal-feces",
+                "excess-animal-urine"
+            ]
         }
     }
 }

@@ -52,7 +52,7 @@ class EconomicData(models.Model):
     currency = models.CharField(max_length=3, choices=CURRENCY)
     discount = models.FloatField(validators=[MinValueValidator(0.0), MaxValueValidator(1.0)], default=0)
     tax = models.FloatField(validators=[MinValueValidator(0.0), MaxValueValidator(1.0)], default=0)
-    population = models.IntegerField(default=None, null=True, blank=True)
+    population = models.IntegerField(null=False, blank=False)
     # TODO make the initial exchange rate dynamic based on https://www.cbn.gov.ng/rates/exchratebycurrency.asp
     exchange_rate = models.FloatField(
         validators=[MinValueValidator(0.0)],

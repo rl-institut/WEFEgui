@@ -274,6 +274,7 @@ class SurveyQuestionForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
+        errors = {}
         if cleaned_data:
             subquestion_to_erase = []
             for record in cleaned_data:
@@ -341,6 +342,125 @@ class SurveyQuestionForm(forms.Form):
                     else:
                         if sq not in selected_subquestions:
                             subquestion_to_erase.append(sq)
+
+                # Perform field validation (check invalid input)
+                # Energy Source
+                if question_id == "1":
+                    ans = cleaned_data[record]
+                    if not ans or ans == ["other"]:
+                        errors[record] = 'At least one of the provided sources must be selected, excluding "Other".'
+
+                # Wastewater Treatment
+                if question_id == "7":
+                    ans = cleaned_data[record]
+                    if not ans or ans == ["other"]:
+                        errors[record] = (
+                            'At least one of the provided technologies must be selected, excluding "Other".'
+                        )
+
+                # Toilet Type
+                if question_id == "7.3":
+                    ans = cleaned_data[record]
+                    if not ans:
+                        errors[record] = "At least one of the provided toilet types must be selected."
+
+                if question_id == "2":
+                    # subquestions to validate taken from WATER_SUPPLY_SURVEY_STRUCTURE
+                    if cleaned_data[record] == "No":
+                        sub_q_to_validate = ["3"]
+                    else:
+                        sub_q_to_validate = ["3a", "3b"]
+
+                    for q in sub_q_to_validate:
+                        subq_record = f"criteria_{q}"
+                        ans = cleaned_data[subq_record]
+                        if not ans or ans == ["other"]:
+                            errors[subq_record] = (
+                                'At least one of the provided sources must be selected, excluding "Other".'
+                            )
+                        else:
+                            # validate natural source subquestions (4 and 5) for each suffix
+                            natural_sources = {
+                                "groundwater well": "_GW",
+                                "desalinated seawater": "_DS",
+                                "river/creek": "_RC",
+                                "lake": "_L",
+                            }
+                            for source, suffix in natural_sources.items():
+                                if source in ans:
+                                    full_suffix = suffix + ("a" if q == "3a" else "b" if q == "3b" else "")
+                                    # validate question 4
+                                    q4_record = f"criteria_4{full_suffix}"
+                                    q4_ans = set(cleaned_data.get(q4_record) or [])
+                                    primary = {"salinity", "heavy metals", "chemical contamination"}
+                                    # secondary = {"fecal contamination", "hardness", "sediments and turbidity", "nitrates and nitrites"}
+                                    q4_errors = []
+                                    if not q4_ans:
+                                        q4_errors.append("At least one water quality issue must be selected.")
+                                    else:
+                                        # only run specific checks if no primary is selected
+                                        if not q4_ans & primary:
+                                            # determine which specific message to show based on what secondary is selected
+                                            if "nitrates and nitrites" in q4_ans:
+                                                q4_errors.append(
+                                                    "Nitrates & Nitrites additionally requires Chemical Contamination (Fertilizers) to be selected."
+                                                )
+                                            if "hardness" in q4_ans:
+                                                q4_errors.append(
+                                                    "Hardness additionally requires Salinity to be selected."
+                                                )
+                                            if "fecal contamination" in q4_ans:
+                                                q4_errors.append(
+                                                    "Fecal Contamination additionally require at least one of Salinity,"
+                                                    " Heavy Metals, or Chemical Contamination to be selected."
+                                                )
+                                            if "sediments and turbidity" in q4_ans:
+                                                q4_errors.append(
+                                                    "Sediments & Turbidity additionally require at least one of Salinity,"
+                                                    " Heavy Metals, or Chemical Contamination to be selected."
+                                                )
+                                        else:
+                                            # primary is present — check specific pairing rules
+                                            if "hardness" in q4_ans and "salinity" not in q4_ans:
+                                                q4_errors.append(
+                                                    "Hardness additionally requires Salinity to be selected."
+                                                )
+                                            if (
+                                                "nitrates and nitrites" in q4_ans
+                                                and "chemical contamination" not in q4_ans
+                                            ):
+                                                q4_errors.append(
+                                                    "Nitrates & Nitrites additionally requires Chemical Contamination (Fertilizers) to be selected."
+                                                )
+                                    if q4_errors:
+                                        errors[q4_record] = " ".join(q4_errors)
+
+                                    # validate 4.1 — salinity value
+                                    q4_1_record = f"criteria_4{full_suffix}.1"
+                                    q4_1_ans = cleaned_data.get(q4_1_record)
+                                    if "salinity" in q4_ans and (q4_1_ans is None or q4_1_ans <= 0):
+                                        errors[q4_1_record] = "Salinity value must be greater than 0."
+
+                                    # validate 4.2 — heavy metals
+                                    q4_2_record = f"criteria_4{full_suffix}.2"
+                                    if "heavy metals" in q4_ans and not cleaned_data.get(q4_2_record):
+                                        errors[q4_2_record] = "At least one heavy metal must be selected."
+
+                                    # validate 4.3 — chemical contaminants
+                                    q4_3_record = f"criteria_4{full_suffix}.3"
+                                    if "chemical contamination" in q4_ans and not cleaned_data.get(q4_3_record):
+                                        errors[q4_3_record] = "At least one chemical contaminant must be selected."
+
+                                    # validate question 5
+                                    q5_record = f"criteria_5{full_suffix}"
+                                    q5_ans = cleaned_data.get(q5_record)
+                                    if not q5_ans or q5_ans == ["other"]:
+                                        errors[q5_record] = (
+                                            'At least one treatment technology or "no" must be selected, excluding "Other".'
+                                        )
+
+            for record, msg in errors.items():
+                self.add_error(record, msg)
 
         else:
             raise ValidationError("This form cannot be blank")

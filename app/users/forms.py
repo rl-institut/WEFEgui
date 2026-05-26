@@ -7,9 +7,7 @@ from .models import CustomUser
 
 class CustomUserCreationForm(UserCreationForm):
 
-    email = forms.CharField(
-        required=True, widget=forms.TextInput(attrs={"placeholder": "name@example.com"})
-    )
+    email = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": "name@example.com"}))
 
     accept_privacy = forms.BooleanField(required=True)
 
@@ -17,7 +15,7 @@ class CustomUserCreationForm(UserCreationForm):
         privacy_url = kwargs.pop("privacy_url", "")
         super().__init__(*args, **kwargs)
         self.fields["accept_privacy"].label = _(
-            "I have read and accept the <a target='_blank' href='%(privacy_url)s'>privacy statement</a> from open_plan"
+            "I have read and accept the <a target='_blank' href='%(privacy_url)s'>privacy statement</a> from wefe_gui"
         ) % {"privacy_url": privacy_url}
 
     class Meta:

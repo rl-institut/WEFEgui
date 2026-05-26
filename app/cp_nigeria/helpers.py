@@ -619,9 +619,9 @@ class ReportHandler:
         if self.text_parameters["grid_option"] == "isolated":
             self.text_parameters["grid_option"] = "not connected to the national grid"
         else:
-            self.text_parameters[
-                "grid_option"
-            ] = "connected to the national grid, however, the electricity level provided is insufficient"
+            self.text_parameters["grid_option"] = (
+                "connected to the national grid, however, the electricity level provided is insufficient"
+            )
 
     def add_heading(self, text, level=1):
         text = text.format(**self.text_parameters).upper()
@@ -1283,7 +1283,8 @@ class ReportHandler:
 
 
 class FinancialTool:
-    cost_assumptions = pd.read_csv(staticfiles_storage.path("financial_tool/cost_assumptions.csv"), sep=";")
+    if os.path.exists(staticfiles_storage.path("financial_tool/cost_assumptions.csv")):
+        cost_assumptions = pd.read_csv(staticfiles_storage.path("financial_tool/cost_assumptions.csv"), sep=";")
     loan_assumptions = {"Tenor": 10, "Grace period": 1, "Cum. replacement years": 10}
 
     def __init__(self, project):

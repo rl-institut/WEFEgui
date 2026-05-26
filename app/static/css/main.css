@@ -2828,6 +2828,24 @@ input:checked + .slider:before {
     .hero__image img {
       max-width: calc(82rem / 2); }
 
+.padding-1 {
+  padding: 1rem;
+  width: 35%;
+  align-self: center; }
+
+.center-text {
+  text-align: center; }
+
+.inp-default {
+  width: initial; }
+
+.no-bullet ul {
+  list-style-type: none; }
+
+.error {
+  color: red;
+  font-weight: bold; }
+
 @use 'variables' as *;
 .project {
   display: flex;

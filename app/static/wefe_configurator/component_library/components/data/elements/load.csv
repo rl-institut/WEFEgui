@@ -1,0 +1,6 @@
+name;amount;profile;type;bus;verbose_name
+el_demand;1;electricity-load-profile;load;ac-elec-bus;"AC Electricity Demand"
+cooking_demand;1;cooking-load-profile;load;cooking-bus;"Cooking Demand"
+sw_demand;1;service-water-demand-profile;load;service-water-bus;"Service Water Demand"
+dw_demand;1;drinking-water-demand;load;drinking-water-bus;"Drinking Water Demand"
+gw_demand;1;groundwater-recharge;load;service-water-bus;"Groundwater Recharge"
