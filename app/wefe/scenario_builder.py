@@ -1233,10 +1233,11 @@ class WEFEConfigurator:
         bus_ref = self.get_single_component_from_datapackage(dp=dp_ref, resource_name="bus", component_name=name)
         if bus_ref.empty:
             self.additional_busses.append(name)
+            bus = pd.Series({"name": name, "type": "bus", "balanced": balanced, "carrier": carrier}).to_frame().T
+        else:
+            bus = bus_ref  # ← full row with verbose_name, plot, etc.
 
         ofname = os.path.join(self.scenario_component_folder, "bus.csv")
-        bus = pd.Series({"name": name, "type": "bus", "balanced": balanced, "carrier": carrier}).to_frame().T
-        # Write or modify the bus in the new datapackage
         if os.path.exists(ofname):
             busses_df = pd.read_csv(ofname, sep=";")
             existing_records = busses_df.name.tolist()
