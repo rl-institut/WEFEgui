@@ -137,8 +137,8 @@ class KoboHandler:
             "respondent_business",
         ]
 
-        counts = {field: 0 for field in fields} | {"respondent_unknown": 0}
-        nr_responses = kobo_json.get("count")
+        counts = {field: 0 for field in fields} | {"respondent_unknown": 0, "respondent_household": 0}
+        nr_responses = kobo_json.get("count", 0)
         if nr_responses == 0:
             return counts
         else:
@@ -151,15 +151,7 @@ class KoboHandler:
                     except KeyError:
                         counts["respondent_unknown"] += 1
 
-            counts["respondent_household"] = (
-                nr_responses
-                - counts["respondent_local_aut"]
-                - counts["respondent_service"]
-                - counts["respondent_large_scale_farm"]
-                - counts["respondent_business"]
-                - counts["respondent_unknown"]
-            )
-
+            counts["respondent_household"] = nr_responses - sum(counts.values())
         return counts
 
     def get_survey_metadata(self, survey_id=None):
@@ -290,14 +282,16 @@ class KoboHandler:
 
 
 def process_wefedemand_response(simulation, wefedemand_response):
+    project = simulation.scenario.project
+    # delete old timeseries
+    ts_qs = Timeseries.objects.filter(scenario=project.scenario, name__contains="ramp_demand")
+    if ts_qs.exists():
+        ts_qs.delete()
+
     for res in ["agg_mean", "agg_max"]:
         demand_dict = wefedemand_response[res]
         df = pd.DataFrame.from_dict(demand_dict)
-        project = simulation.scenario.project
-        # delete old timeseries
-        ts_qs = Timeseries.objects.filter(scenario=project.scenario, name__contains="ramp_demand")
-        if ts_qs.exists():
-            ts_qs.delete()
+
         # create new timeseries
         for col in df:
             ts = Timeseries.objects.create(
