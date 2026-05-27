@@ -137,8 +137,8 @@ class KoboHandler:
             "respondent_business",
         ]
 
-        counts = {field: 0 for field in fields} | {"respondent_unknown": 0}
-        nr_responses = kobo_json.get("count")
+        counts = {field: 0 for field in fields} | {"respondent_unknown": 0, "respondent_household": 0}
+        nr_responses = kobo_json.get("count", 0)
         if nr_responses == 0:
             return counts
         else:
@@ -151,15 +151,7 @@ class KoboHandler:
                     except KeyError:
                         counts["respondent_unknown"] += 1
 
-            counts["respondent_household"] = (
-                nr_responses
-                - counts["respondent_local_aut"]
-                - counts["respondent_service"]
-                - counts["respondent_large_scale_farm"]
-                - counts["respondent_business"]
-                - counts["respondent_unknown"]
-            )
-
+            counts["respondent_household"] = nr_responses - sum(counts.values())
         return counts
 
     def get_survey_metadata(self, survey_id=None):
