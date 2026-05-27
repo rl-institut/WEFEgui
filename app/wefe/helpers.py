@@ -294,9 +294,13 @@ def process_wefedemand_response(simulation, wefedemand_response):
         demand_dict = wefedemand_response[res]
         df = pd.DataFrame.from_dict(demand_dict)
         project = simulation.scenario.project
+        # delete old timeseries
+        ts_qs = Timeseries.objects.filter(scenario=project.scenario, name__contains="ramp_demand")
+        if ts_qs.exists():
+            ts_qs.delete()
+        # create new timeseries
         for col in df:
-            # TODO here it would probably be better to overwrite if the survey has more responses and gets resimulated
-            ts, _ = Timeseries.objects.get_or_create(
+            ts = Timeseries.objects.create(
                 name=f"{col}_ramp_demand_{res}",
                 scenario=project.scenario,
                 values=df[col].values.tolist(),
