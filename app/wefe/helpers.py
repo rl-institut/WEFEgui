@@ -290,14 +290,16 @@ class KoboHandler:
 
 
 def process_wefedemand_response(simulation, wefedemand_response):
+    project = simulation.scenario.project
+    # delete old timeseries
+    ts_qs = Timeseries.objects.filter(scenario=project.scenario, name__contains="ramp_demand")
+    if ts_qs.exists():
+        ts_qs.delete()
+
     for res in ["agg_mean", "agg_max"]:
         demand_dict = wefedemand_response[res]
         df = pd.DataFrame.from_dict(demand_dict)
-        project = simulation.scenario.project
-        # delete old timeseries
-        ts_qs = Timeseries.objects.filter(scenario=project.scenario, name__contains="ramp_demand")
-        if ts_qs.exists():
-            ts_qs.delete()
+
         # create new timeseries
         for col in df:
             ts = Timeseries.objects.create(
