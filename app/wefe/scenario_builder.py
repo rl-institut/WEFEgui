@@ -772,7 +772,9 @@ class WEFEConfigurator:
         qs_ts = Timeseries.objects.filter(scenario__id=self.scen_id, name__contains=timeseries_suffix)
         timeseries = {ts.name.replace(timeseries_suffix, ""): ts.values for ts in qs_ts}
 
-        return pd.DataFrame(timeseries)
+        # WEFEDemand returns electricity demand in Wh and water demand in liters, while the component library
+        # works in kWh and m³ -> convert both by a factor of 1/1000 before handing the demand to the simulation
+        return pd.DataFrame(timeseries) / 1000
 
     @property
     def weather_data(self):
